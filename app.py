@@ -3,13 +3,35 @@ import streamlit.components.v1 as components
 import requests
 import re
 import time
+import json
+import os
+import logging
 from datetime import datetime
 from typing import Optional, List, Dict
 from PIL import Image
+from pathlib import Path
+
+# ==========================================
+# LOGGING CONFIGURATION
+# ==========================================
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 # ==========================================
 # CONFIGURATION & CONSTANTS
 # ==========================================
+# Paths
+BASE_DIR = Path(__file__).parent
+STYLES_DIR = BASE_DIR / "styles"
+DATA_DIR = BASE_DIR / "data"
+THREADS_FILE = DATA_DIR / "threads.json"
+
+# Ensure data directory exists
+DATA_DIR.mkdir(exist_ok=True)
+
 # Load favicon
 try:
     favicon = Image.open("favicon.jpg")
@@ -23,553 +45,30 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for better UI with floating message history
-def get_custom_css(dark_mode: bool = False):
-    if dark_mode:
-        bg_color = "#0d1117"
-        secondary_bg = "#161b22"
-        text_color = "#f0f6fc"
-        text_secondary = "#8b949e"
-        panel_bg = "rgba(22, 27, 34, 0.92)"
-        panel_border = "rgba(48, 54, 61, 0.8)"
-        item_bg = "rgba(33, 38, 45, 0.9)"
-        item_hover = "rgba(48, 54, 61, 0.95)"
-        title_border = "#58a6ff"
-        accent_color = "#58a6ff"
-        accent_gradient = "linear-gradient(135deg, #58a6ff 0%, #a371f7 100%)"
-        sidebar_bg = "#161b22"
-        header_bg = "#0d1117"
-        input_bg = "#21262d"
-        border_color = "#30363d"
-    else:
-        bg_color = "#ffffff"
-        secondary_bg = "#f6f8fa"
-        text_color = "#24292f"
-        text_secondary = "#57606a"
-        panel_bg = "rgba(255, 255, 255, 0.92)"
-        panel_border = "rgba(208, 215, 222, 0.8)"
-        item_bg = "rgba(246, 248, 250, 0.9)"
-        item_hover = "rgba(234, 238, 242, 0.95)"
-        title_border = "#2da44e"
-        accent_color = "#2da44e"
-        accent_gradient = "linear-gradient(135deg, #2da44e 0%, #1a7f37 100%)"
-        sidebar_bg = "#f6f8fa"
-        header_bg = "#ffffff"
-        input_bg = "#f6f8fa"
-        border_color = "#d0d7de"
-    
+# ==========================================
+# CSS LOADING FROM FILES
+# ==========================================
+def load_css_from_file(dark_mode: bool = False) -> str:
+    """Load CSS from external file based on theme."""
+    css_file = STYLES_DIR / ("dark.css" if dark_mode else "light.css")
+    try:
+        with open(css_file, "r", encoding="utf-8") as f:
+            css_content = f.read()
+            logger.info(f"Loaded CSS from {css_file}")
+            return f"<style>{css_content}</style>"
+    except FileNotFoundError:
+        logger.warning(f"CSS file not found: {css_file}, using fallback")
+        return get_fallback_css(dark_mode)
+
+def get_fallback_css(dark_mode: bool = False) -> str:
+    """Minimal fallback CSS if files not found."""
+    bg = "#0d1117" if dark_mode else "#ffffff"
+    text = "#f0f6fc" if dark_mode else "#24292f"
     return f"""
-<style>
-    /* Google Font Import */
-    @import url('https://fonts.googleapis.com/css2?family=WDXL+Lubrifont+TC&display=swap');
-    
-    /* ===== GLOBAL DARK MODE STYLES ===== */
-    {'html, body, [data-testid="stAppViewContainer"], [data-testid="stApp"], .stApp {' if dark_mode else ''}
-        {'background-color: ' + bg_color + ' !important;' if dark_mode else ''}
-        {'color: ' + text_color + ' !important;' if dark_mode else ''}
-    {'}' if dark_mode else ''}
-    
-    /* ===== SIDEBAR COMPLETE STYLING ===== */
-    [data-testid="stSidebar"] {{
-        background-color: {sidebar_bg} !important;
-        border-right: 1px solid {border_color} !important;
-    }}
-    
-    [data-testid="stSidebar"] > div:first-child {{
-        background-color: {sidebar_bg} !important;
-        padding-top: 0.5rem !important;
-    }}
-    
-    [data-testid="stSidebar"] .block-container {{
-        padding: 0.5rem 1rem !important;
-    }}
-    
-    [data-testid="stSidebar"] [data-testid="stVerticalBlock"] > div {{
-        margin-bottom: 0.3rem !important;
-    }}
-    
-    [data-testid="stSidebar"] hr {{
-        margin: 0.5rem 0 !important;
-    }}
-    
-    [data-testid="stSidebar"] * {{
-        color: {text_color} !important;
-    }}
-    
-    /* Sidebar title with green text */
-    .sidebar-title {{
-        font-size: 1.3rem !important;
-        font-weight: 700 !important;
-        margin-bottom: 0.5rem !important;
-    }}
-    
-    .sidebar-title-text {{
-        color: {accent_color} !important;
-    }}
-    
-    [data-testid="stSidebar"] .stMarkdown p,
-    [data-testid="stSidebar"] .stMarkdown span,
-    [data-testid="stSidebar"] label,
-    [data-testid="stSidebar"] .stCaption {{
-        color: {text_secondary} !important;
-    }}
-    
-    [data-testid="stSidebar"] h1,
-    [data-testid="stSidebar"] h2,
-    [data-testid="stSidebar"] h3 {{
-        color: {text_color} !important;
-        {'background: ' + accent_gradient + ';' if dark_mode else ''}
-        {'-webkit-background-clip: text;' if dark_mode else ''}
-        {'-webkit-text-fill-color: transparent;' if dark_mode else ''}
-        {'background-clip: text;' if dark_mode else ''}
-    }}
-    
-    /* ===== HEADER / TOP BAR ===== */
-    header, [data-testid="stHeader"] {{
-        background-color: {header_bg} !important;
-        border-bottom: 1px solid {border_color} !important;
-    }}
-    
-    /* Fixed header title in Streamlit header bar */
-    [data-testid="stHeader"]::before {{
-        content: 'ProfeBot: SPAN1001 Interactive Tutor';
-        position: absolute;
-        left: 50%;
-        top: 50%;
-        transform: translate(-50%, -50%);
-        font-family: 'WDXL Lubrifont TC', sans-serif !important;
-        font-size: 1.2rem !important;
-        font-weight: 700 !important;
-        background: {accent_gradient};
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        z-index: 1000;
-        white-space: nowrap;
-    }}
-    
-    /* History item clickable */
-    .history-item {{
-        padding: 12px;
-        margin: 8px 0;
-        background: {item_bg};
-        border-left: 3px solid {accent_color};
-        border-radius: 8px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        font-size: 0.85rem;
-    }}
-    
-    .history-item:hover {{
-        background: {item_hover};
-        transform: translateX(-3px);
-        box-shadow: 0 4px 12px rgba(0,0,0,{'0.3' if dark_mode else '0.1'});
-        border-left-color: {'#a371f7' if dark_mode else '#1a7f37'};
-    }}
-    
-    .history-item:active {{
-        transform: translateX(-5px) scale(0.98);
-    }}
-    
-    /* ===== MAIN CONTENT AREA ===== */
-    .main, [data-testid="stMain"] {{
-        background-color: {bg_color} !important;
-    }}
-    
-    .main .block-container {{
-        padding-right: 320px;
-        padding-top: 1rem;
-        max-width: calc(100% - 300px);
-        margin-right: 20px;
-        background-color: {bg_color} !important;
-    }}
-    
-    /* All text in main area */
-    .main p, .main span, .main div {{
-        color: {text_color} !important;
-    }}
-    
-    .main .stCaption, .main small {{
-        color: {text_secondary} !important;
-    }}
-    
-    /* ===== CUSTOM TITLE STYLING ===== */
-    .custom-title {{
-        font-family: 'WDXL Lubrifont TC', sans-serif !important;
-        font-size: 2.5rem !important;
-        font-weight: 700 !important;
-        background: {accent_gradient};
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        margin-bottom: 0.5rem !important;
-        text-shadow: {'0 0 30px rgba(88, 166, 255, 0.3)' if dark_mode else 'none'};
-    }}
-    
-    .custom-subtitle {{
-        color: {text_secondary} !important;
-        font-size: 1rem;
-        margin-top: -10px;
-    }}
-    
-    /* ===== FLOATING MESSAGE HISTORY PANEL ===== */
-    .message-history-panel {{
-        position: fixed;
-        right: 20px;
-        top: 80px;
-        width: 280px;
-        max-height: calc(100vh - 120px);
-        min-height: 80px;
-        height: auto;
-        background: {panel_bg};
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border: 1px solid {panel_border};
-        border-radius: 16px;
-        padding: 15px;
-        overflow-y: auto;
-        box-shadow: 0 8px 32px rgba(0,0,0,{'0.4' if dark_mode else '0.12'});
-        z-index: 999;
-        transition: all 0.3s ease;
-    }}
-    
-    .message-history-panel::-webkit-scrollbar {{
-        width: 6px;
-    }}
-    
-    .message-history-panel::-webkit-scrollbar-track {{
-        background: transparent;
-        border-radius: 10px;
-    }}
-    
-    .message-history-panel::-webkit-scrollbar-thumb {{
-        background: {border_color};
-        border-radius: 10px;
-    }}
-    
-    .message-history-panel::-webkit-scrollbar-thumb:hover {{
-        background: {accent_color};
-    }}
-    
-    .history-item-time {{
-        font-size: 0.7rem;
-        color: {text_secondary};
-        margin-bottom: 4px;
-    }}
-    
-    .history-item-text {{
-        color: {text_color};
-        line-height: 1.4;
-        display: -webkit-box;
-        -webkit-line-clamp: 3;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-    }}
-    
-    .history-panel-title {{
-        font-size: 1rem;
-        font-weight: 600;
-        margin-bottom: 15px;
-        padding-bottom: 10px;
-        border-bottom: 2px solid {title_border};
-        color: {text_color};
-        {'background: ' + accent_gradient + ';' if dark_mode else ''}
-        {'-webkit-background-clip: text;' if dark_mode else ''}
-        {'-webkit-text-fill-color: transparent;' if dark_mode else ''}
-    }}
-    
-    .history-count {{
-        font-size: 0.75rem;
-        color: {text_secondary};
-        font-weight: normal;
-        {'-webkit-text-fill-color: ' + text_secondary + ';' if dark_mode else ''}
-    }}
-    
-    /* ===== CHAT MESSAGES ===== */
-    .stChatMessage {{
-        padding: 1rem;
-        border-radius: 12px;
-        margin-bottom: 0.5rem;
-        scroll-margin-top: 100px;
-        background-color: {secondary_bg} !important;
-        border: 1px solid {border_color};
-    }}
-    
-    .stChatMessage p, .stChatMessage span, .stChatMessage div,
-    .stChatMessage li, .stChatMessage strong, .stChatMessage em {{
-        color: {text_color} !important;
-    }}
-    
-    /* Force all markdown text in chat to be visible */
-    [data-testid="stChatMessage"] * {{
-        color: {text_color} !important;
-    }}
-    
-    [data-testid="stChatMessage"] code {{
-        background-color: {input_bg} !important;
-        color: {accent_color} !important;
-    }}
-    
-    /* ===== INPUT FIELDS ===== */
-    .stTextInput input, [data-testid="stChatInput"] textarea {{
-        background-color: {input_bg} !important;
-        color: {text_color} !important;
-        border: 1px solid {border_color} !important;
-        border-radius: 8px !important;
-    }}
-    
-    /* Chat input container/wrapper */
-    [data-testid="stChatInput"] {{
-        background-color: {bg_color} !important;
-        border-color: {border_color} !important;
-    }}
-    
-    [data-testid="stChatInput"] > div {{
-        background-color: {input_bg} !important;
-        border-color: {border_color} !important;
-    }}
-    
-    /* Bottom chat input area */
-    [data-testid="stBottom"] {{
-        background-color: {bg_color} !important;
-    }}
-    
-    [data-testid="stBottom"] > div {{
-        background-color: {bg_color} !important;
-    }}
-    
-    .stChatInputContainer {{
-        background-color: {bg_color} !important;
-    }}
-    
-    /* ===== SELECTBOX STYLING ===== */
-    .stSelectbox > div > div {{
-        background-color: {input_bg} !important;
-        color: {text_color} !important;
-        border: 1px solid {border_color} !important;
-    }}
-    
-    .stSelectbox [data-baseweb="select"] {{
-        background-color: {input_bg} !important;
-    }}
-    
-    .stSelectbox [data-baseweb="select"] > div {{
-        background-color: {input_bg} !important;
-        color: {text_color} !important;
-        border-color: {border_color} !important;
-    }}
-    
-    .stSelectbox [data-baseweb="select"] span {{
-        color: {text_color} !important;
-    }}
-    
-    /* Dropdown menu */
-    [data-baseweb="popover"] {{
-        background-color: {secondary_bg} !important;
-    }}
-    
-    [data-baseweb="popover"] li {{
-        background-color: {secondary_bg} !important;
-        color: {text_color} !important;
-    }}
-    
-    [data-baseweb="popover"] li:hover {{
-        background-color: {item_hover} !important;
-    }}
-    
-    .stTextInput input:focus, [data-testid="stChatInput"] textarea:focus {{
-        border-color: {accent_color} !important;
-        box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.2) !important;
-    }}
-    
-    /* ===== BUTTONS ===== */
-    .stButton button {{
-        width: 100%;
-        border-radius: 8px;
-        transition: all 0.3s ease;
-        font-size: 0.9rem;
-        background-color: {secondary_bg} !important;
-        color: {text_color} !important;
-        border: 1px solid {border_color} !important;
-    }}
-    
-    .stButton button:hover {{
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0,0,0,{'0.3' if dark_mode else '0.15'});
-        border-color: {accent_color} !important;
-        background-color: {item_hover} !important;
-    }}
-    
-    .stButton button[kind="primary"] {{
-        background: {accent_gradient} !important;
-        border: none !important;
-        color: white !important;
-    }}
-    
-    /* Primary button text must be white */
-    .stButton button[kind="primary"] span,
-    .stButton button[kind="primary"] p,
-    .stButton button[kind="primary"] div {{
-        color: white !important;
-    }}
-    
-    /* Quick action buttons */
-    .quick-action-btn button {{
-        height: 45px !important;
-        font-weight: 500;
-        font-size: 0.8rem !important;
-        padding: 0.3rem 0.5rem !important;
-    }}
-    
-    /* ===== STATUS INDICATORS ===== */
-    .status-badge {{
-        padding: 0.25rem 0.75rem;
-        border-radius: 12px;
-        font-size: 0.85rem;
-        font-weight: 600;
-        display: inline-block;
-        margin: 0.25rem;
-    }}
-    
-    .status-success {{
-        background-color: {'rgba(46, 160, 67, 0.2)' if dark_mode else '#d4edda'};
-        color: {'#3fb950' if dark_mode else '#155724'};
-        border: 1px solid {'#238636' if dark_mode else '#155724'};
-    }}
-    
-    .status-error {{
-        background-color: {'rgba(248, 81, 73, 0.2)' if dark_mode else '#f8d7da'};
-        color: {'#f85149' if dark_mode else '#721c24'};
-        border: 1px solid {'#da3633' if dark_mode else '#721c24'};
-    }}
-    
-    /* ===== EXPANDER ===== */
-    .streamlit-expanderHeader {{
-        background-color: {input_bg} !important;
-        color: {text_color} !important;
-        border-radius: 8px !important;
-        border: 1px solid {border_color} !important;
-    }}
-    
-    .streamlit-expanderHeader:hover {{
-        background-color: {item_hover} !important;
-        border-color: {accent_color} !important;
-    }}
-    
-    .streamlit-expanderHeader p, .streamlit-expanderHeader span {{
-        color: {text_color} !important;
-    }}
-    
-    .streamlit-expanderContent {{
-        background-color: {secondary_bg} !important;
-        border: 1px solid {border_color} !important;
-        border-top: none !important;
-    }}
-    
-    .streamlit-expanderContent p, .streamlit-expanderContent span,
-    .streamlit-expanderContent div, .streamlit-expanderContent label {{
-        color: {text_color} !important;
-    }}
-    
-    /* New Streamlit expander selectors */
-    [data-testid="stExpander"] {{
-        background-color: {secondary_bg} !important;
-        border: 1px solid {border_color} !important;
-        border-radius: 8px !important;
-    }}
-    
-    [data-testid="stExpander"] > div:first-child {{
-        background-color: {input_bg} !important;
-        border-radius: 8px !important;
-    }}
-    
-    [data-testid="stExpander"] details {{
-        background-color: {secondary_bg} !important;
-    }}
-    
-    [data-testid="stExpander"] summary {{
-        background-color: {input_bg} !important;
-        color: {text_color} !important;
-    }}
-    
-    [data-testid="stExpander"] details[open] > summary {{
-        background-color: {input_bg} !important;
-    }}
-    
-    [data-testid="stExpander"] details > div {{
-        background-color: {secondary_bg} !important;
-    }}
-    
-    /* Expander content captions */
-    .streamlit-expanderContent .stCaption {{
-        color: {text_secondary} !important;
-    }}
-    
-    /* ===== DIVIDERS ===== */
-    hr {{
-        border-color: {border_color} !important;
-    }}
-    
-    /* ===== METRICS ===== */
-    [data-testid="stMetricValue"] {{
-        color: {accent_color} !important;
-    }}
-    
-    [data-testid="stMetricLabel"] {{
-        color: {text_secondary} !important;
-    }}
-    
-    /* Empty state */
-    .empty-history {{
-        text-align: center;
-        color: {text_secondary};
-        font-size: 0.85rem;
-        padding: 20px;
-        font-style: italic;
-    }}
-    
-    /* Loading animation */
-    .loading-text {{
-        animation: pulse 1.5s ease-in-out infinite;
-    }}
-    
-    @keyframes pulse {{
-        0%, 100% {{ opacity: 1; }}
-        50% {{ opacity: 0.5; }}
-    }}
-    
-    /* Department link styling */
-    .dept-link {{
-        text-align: center;
-        padding: 15px;
-        margin-top: 10px;
-        background: {item_bg};
-        border-radius: 8px;
-        border: 1px solid {border_color};
-    }}
-    
-    .dept-link a {{
-        color: {accent_color} !important;
-        text-decoration: none;
-        font-size: 0.9rem;
-        font-weight: 500;
-    }}
-    
-    .dept-link a:hover {{
-        text-decoration: underline;
-        {'filter: brightness(1.2);' if dark_mode else ''}
-    }}
-    
-    /* ===== FOOTER ===== */
-    footer {{
-        background-color: {bg_color} !important;
-    }}
-    
-    footer, footer * {{
-        color: {text_secondary} !important;
-    }}
-</style>
-"""
+    <style>
+        .stApp {{ background-color: {bg}; color: {text}; }}
+    </style>
+    """
 
 # API Configuration
 MAX_RETRIES = 3
@@ -721,43 +220,82 @@ def get_weekly_content() -> str:
         results = data.get("results", [])
         
         if not results:
+            logger.warning("No active units found in Notion database")
             return "⚠️ No active units found in database."
 
         full_context = ""
         for page in results:
-            props = page["properties"]
+            props = page.get("properties", {})
             
-            def get_text(col_name: str) -> str:
-                if col_name == "Nombre":
-                    items = props.get("Nombre", {}).get("title", [])
-                else:
-                    items = props.get(col_name, {}).get("rich_text", [])
-                return " ".join([item.get("text", {}).get("content", "") for item in items])
+            def get_text_safe(col_name: str) -> str:
+                """Safely extract text from Notion properties with validation."""
+                try:
+                    if col_name == "Nombre":
+                        prop_data = props.get("Nombre", {})
+                        items = prop_data.get("title", []) if prop_data else []
+                    else:
+                        prop_data = props.get(col_name, {})
+                        items = prop_data.get("rich_text", []) if prop_data else []
+                    
+                    if not items:
+                        logger.debug(f"No content found for column: {col_name}")
+                        return ""
+                    
+                    texts = []
+                    for item in items:
+                        if isinstance(item, dict):
+                            text_content = item.get("text", {})
+                            if isinstance(text_content, dict):
+                                content = text_content.get("content", "")
+                                if content:
+                                    texts.append(content)
+                    return " ".join(texts)
+                except Exception as e:
+                    logger.error(f"Error extracting text from {col_name}: {e}")
+                    return ""
 
-            name = get_text("Nombre")
-            lexicon = get_text("Léxico")
-            grammar = get_text("Gramática")
-            communication = get_text("Comunicación")
-            exercises = get_text("Ejercicios")
+            name = get_text_safe("Nombre")
+            lexicon = get_text_safe("Léxico")
+            grammar = get_text_safe("Gramática")
+            communication = get_text_safe("Comunicación")
+            exercises = get_text_safe("Ejercicios")
 
-            full_context += f"""
+            if name:  # Only add unit if it has a name
+                full_context += f"""
 === UNIT: {name} ===
-[VOCABULARY]: {lexicon}
-[GRAMMAR]: {grammar}
-[COMMUNICATION]: {communication}
-[APPROVED EXERCISES]: {exercises}
+[VOCABULARY]: {lexicon or 'No vocabulary listed'}
+[GRAMMAR]: {grammar or 'No grammar listed'}
+[COMMUNICATION]: {communication or 'No communication topics listed'}
+[APPROVED EXERCISES]: {exercises or 'No exercises listed'}
 ==============================
 """
+                logger.info(f"Loaded unit: {name}")
+        
+        if not full_context:
+            return "⚠️ No valid units found in database."
+            
         return full_context
         
+    except json.JSONDecodeError as e:
+        logger.error(f"JSON decode error: {e}")
+        return f"❌ Error parsing Notion response: Invalid JSON"
     except Exception as e:
+        logger.error(f"Error parsing Notion data: {e}")
         return f"❌ Error parsing Notion data: {str(e)}"
 
 # ==========================================
 # AI CONNECTION
 # ==========================================
-def get_ai_response(user_message: str, notion_context: str, language: str, custom_language: str = "") -> str:
-    """Get AI response from HKU API with error handling."""
+def get_ai_response(user_message: str, notion_context: str, language: str, custom_language: str = "", conversation_history: List[Dict] = None) -> str:
+    """Get AI response from HKU API with error handling and conversation history.
+    
+    Args:
+        user_message: The current user message
+        notion_context: The course content from Notion
+        language: Preferred language for explanations
+        custom_language: Custom language if 'Other' selected
+        conversation_history: List of previous messages in the conversation
+    """
     
     language_instruction = get_language_instruction(language, custom_language)
     
@@ -825,12 +363,30 @@ At the very end of your response, you MUST generate exactly 3 suggested follow-u
         "Ocp-Apim-Subscription-Key": HKU_API_KEY
     }
     
+    # Build messages array with conversation history
+    messages = [{"role": "system", "content": system_prompt}]
+    
+    # Add conversation history (limit to last 10 messages to manage context window)
+    if conversation_history:
+        # Filter out the suggestions from messages for cleaner context
+        for msg in conversation_history[-10:]:
+            role = msg.get("role", "user")
+            content = msg.get("content", "")
+            # Clean out the /// suggestions from assistant messages
+            if role == "assistant":
+                import re
+                content = re.sub(r'///.*', '', content).strip()
+            if content:
+                messages.append({"role": role, "content": content})
+    
+    # Add current user message
+    messages.append({"role": "user", "content": user_message})
+    
+    logger.info(f"Sending {len(messages)} messages to AI (including system prompt)")
+    
     payload = {
         "model": DEPLOYMENT_ID,
-        "messages": [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_message}
-        ],
+        "messages": messages,
         "max_tokens": 1000,
         "temperature": 0.4
     }
@@ -895,10 +451,78 @@ def initialize_session_state():
     if "dark_mode" not in st.session_state:
         st.session_state.dark_mode = False
 
+# ==========================================
+# PERSISTENCE FUNCTIONS
+# ==========================================
+def save_threads_to_file():
+    """Save all threads to a local JSON file."""
+    try:
+        threads_data = {}
+        for thread_id, thread in st.session_state.threads.items():
+            threads_data[thread_id] = {
+                "title": thread["title"],
+                "messages": thread["messages"],
+                "created_at": thread["created_at"].isoformat(),
+                "suggestions": thread.get("suggestions", [])
+            }
+        
+        with open(THREADS_FILE, "w", encoding="utf-8") as f:
+            json.dump({
+                "threads": threads_data,
+                "current_thread_id": st.session_state.current_thread_id,
+                "thread_counter": st.session_state.thread_counter,
+                "message_count": st.session_state.message_count,
+                "dark_mode": st.session_state.dark_mode,
+                "preferred_language": st.session_state.preferred_language,
+                "custom_language": st.session_state.custom_language
+            }, f, ensure_ascii=False, indent=2)
+        logger.info(f"Saved {len(threads_data)} threads to {THREADS_FILE}")
+    except Exception as e:
+        logger.error(f"Error saving threads: {e}")
+
+def load_threads_from_file():
+    """Load threads from local JSON file."""
+    try:
+        if THREADS_FILE.exists():
+            with open(THREADS_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            
+            # Restore threads
+            threads = {}
+            for thread_id, thread_data in data.get("threads", {}).items():
+                threads[thread_id] = {
+                    "title": thread_data["title"],
+                    "messages": thread_data["messages"],
+                    "created_at": datetime.fromisoformat(thread_data["created_at"]),
+                    "suggestions": thread_data.get("suggestions", [])
+                }
+            
+            if threads:
+                st.session_state.threads = threads
+                st.session_state.current_thread_id = data.get("current_thread_id", list(threads.keys())[0])
+                st.session_state.thread_counter = data.get("thread_counter", len(threads))
+                st.session_state.message_count = data.get("message_count", 0)
+                st.session_state.dark_mode = data.get("dark_mode", False)
+                st.session_state.preferred_language = data.get("preferred_language", "English")
+                st.session_state.custom_language = data.get("custom_language", "")
+                logger.info(f"Loaded {len(threads)} threads from {THREADS_FILE}")
+                return True
+    except Exception as e:
+        logger.error(f"Error loading threads: {e}")
+    return False
+
 initialize_session_state()
 
-# Apply custom CSS based on dark mode
-st.markdown(get_custom_css(st.session_state.dark_mode), unsafe_allow_html=True)
+# Try to load saved threads
+if "threads_loaded" not in st.session_state:
+    load_threads_from_file()
+    st.session_state.threads_loaded = True
+
+# Apply custom CSS - try external files first, fallback to inline
+try:
+    st.markdown(load_css_from_file(st.session_state.dark_mode), unsafe_allow_html=True)
+except:
+    st.markdown(get_fallback_css(st.session_state.dark_mode), unsafe_allow_html=True)
 
 # ==========================================
 # THREAD MANAGEMENT FUNCTIONS
@@ -919,11 +543,13 @@ def create_new_thread():
     }
     
     st.session_state.current_thread_id = new_thread_id
+    save_threads_to_file()  # Persist new thread
 
 def switch_thread(thread_id: str):
     """Switch to a different conversation thread."""
     st.session_state.current_thread_id = thread_id
     st.session_state.selected_message_index = None
+    save_threads_to_file()  # Persist current thread change
 
 def delete_thread(thread_id: str):
     """Delete a conversation thread."""
@@ -931,6 +557,7 @@ def delete_thread(thread_id: str):
         del st.session_state.threads[thread_id]
         if st.session_state.current_thread_id == thread_id:
             st.session_state.current_thread_id = list(st.session_state.threads.keys())[0]
+        save_threads_to_file()  # Persist deletion
 
 def get_current_thread():
     """Get the current active thread."""
@@ -996,13 +623,17 @@ def process_user_input(user_text: str):
     current_thread["messages"].append({"role": "user", "content": user_text})
     st.session_state.message_count += 1
     
-    # Get AI response
+    # Get AI response with conversation history
     with st.spinner("🤔 Thinking..."):
+        # Get messages before adding the current one (for history)
+        history_messages = current_thread["messages"][:-1]  # Exclude the just-added user message
+        
         raw_response = get_ai_response(
             user_text, 
             st.session_state.contexto,
             st.session_state.preferred_language,
-            st.session_state.custom_language
+            st.session_state.custom_language,
+            conversation_history=history_messages
         )
         
         # Extract suggestions
@@ -1016,6 +647,9 @@ def process_user_input(user_text: str):
     # Add AI message
     current_thread["messages"].append({"role": "assistant", "content": clean_response})
     st.session_state.message_count += 1
+    
+    # Save threads after each interaction
+    save_threads_to_file()
 
 # ==========================================
 # SIDEBAR
@@ -1081,6 +715,7 @@ with st.sidebar:
         }]
         current_thread["suggestions"] = []
         st.session_state.selected_message_index = None
+        save_threads_to_file()  # Persist cleared chat
         st.rerun()
     
     st.divider()
@@ -1131,6 +766,7 @@ with st.sidebar:
         dark_mode_label = "Switch to Day Mode" if st.session_state.dark_mode else "Switch to Night Mode"
         if st.button(dark_mode_label, use_container_width=True, key="dark_mode_toggle"):
             st.session_state.dark_mode = not st.session_state.dark_mode
+            save_threads_to_file()  # Persist preference
             st.rerun()
         
         st.divider()
