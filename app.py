@@ -580,8 +580,6 @@ def export_conversation_md(messages: list) -> str:
     lines.append(f"*Exported from ProfeBot - SPAN1001 Tutor | {len(messages)} messages*")
     
     return "\n".join(lines)
-    
-    return "\n".join(lines)
 
 # ==========================================
 # ANALYTICS FUNCTIONS
@@ -689,6 +687,7 @@ def get_analytics_summary() -> Dict:
     
     return {
         "total_messages": analytics.get("total_messages", 0),
+        "total_sessions": analytics.get("total_sessions", 1),
         "avg_response_time": round(avg_response, 2),
         "top_topics": top_topics,
         "messages_last_7_days": last_7_days,
@@ -698,6 +697,13 @@ def get_analytics_summary() -> Dict:
             reverse=True
         )[:3]
     }
+
+# Track session on first load (after analytics functions are defined)
+if "session_tracked" not in st.session_state:
+    st.session_state.session_tracked = True
+    _analytics = load_analytics()
+    _analytics["total_sessions"] = _analytics.get("total_sessions", 0) + 1
+    save_analytics(_analytics)
 
 # ==========================================
 # THREAD MANAGEMENT FUNCTIONS
