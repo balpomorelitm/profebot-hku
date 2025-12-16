@@ -318,6 +318,30 @@ def get_custom_css(dark_mode: bool = False):
         border-radius: 8px !important;
     }}
     
+    /* Chat input container/wrapper */
+    [data-testid="stChatInput"] {{
+        background-color: {bg_color} !important;
+        border-color: {border_color} !important;
+    }}
+    
+    [data-testid="stChatInput"] > div {{
+        background-color: {input_bg} !important;
+        border-color: {border_color} !important;
+    }}
+    
+    /* Bottom chat input area */
+    [data-testid="stBottom"] {{
+        background-color: {bg_color} !important;
+    }}
+    
+    [data-testid="stBottom"] > div {{
+        background-color: {bg_color} !important;
+    }}
+    
+    .stChatInputContainer {{
+        background-color: {bg_color} !important;
+    }}
+    
     /* ===== SELECTBOX STYLING ===== */
     .stSelectbox > div > div {{
         background-color: {input_bg} !important;
@@ -445,6 +469,35 @@ def get_custom_css(dark_mode: bool = False):
     .streamlit-expanderContent p, .streamlit-expanderContent span,
     .streamlit-expanderContent div, .streamlit-expanderContent label {{
         color: {text_color} !important;
+    }}
+    
+    /* New Streamlit expander selectors */
+    [data-testid="stExpander"] {{
+        background-color: {secondary_bg} !important;
+        border: 1px solid {border_color} !important;
+        border-radius: 8px !important;
+    }}
+    
+    [data-testid="stExpander"] > div:first-child {{
+        background-color: {input_bg} !important;
+        border-radius: 8px !important;
+    }}
+    
+    [data-testid="stExpander"] details {{
+        background-color: {secondary_bg} !important;
+    }}
+    
+    [data-testid="stExpander"] summary {{
+        background-color: {input_bg} !important;
+        color: {text_color} !important;
+    }}
+    
+    [data-testid="stExpander"] details[open] > summary {{
+        background-color: {input_bg} !important;
+    }}
+    
+    [data-testid="stExpander"] details > div {{
+        background-color: {secondary_bg} !important;
     }}
     
     /* Expander content captions */
