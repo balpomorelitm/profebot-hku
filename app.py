@@ -6,10 +6,11 @@ import time
 import json
 import os
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional, List, Dict
 from PIL import Image
 from pathlib import Path
+from collections import Counter
 
 # ==========================================
 # LOGGING CONFIGURATION
@@ -28,6 +29,7 @@ BASE_DIR = Path(__file__).parent
 STYLES_DIR = BASE_DIR / "styles"
 DATA_DIR = BASE_DIR / "data"
 THREADS_FILE = DATA_DIR / "threads.json"
+ANALYTICS_FILE = DATA_DIR / "analytics.json"
 
 # Ensure data directory exists
 DATA_DIR.mkdir(exist_ok=True)
@@ -525,6 +527,179 @@ except:
     st.markdown(get_fallback_css(st.session_state.dark_mode), unsafe_allow_html=True)
 
 # ==========================================
+# EXPORT FUNCTIONS
+# ==========================================
+def export_conversation_txt(messages: list) -> str:
+    """Export conversation to TXT format."""
+    current_thread = get_current_thread()
+    lines = []
+    lines.append(f"ProfeBot Conversation Export")
+    lines.append(f"Title: {current_thread['title']}")
+    lines.append(f"Date: {current_thread['created_at'].strftime('%Y-%m-%d %H:%M')}")
+    lines.append(f"Language: {st.session_state.preferred_language}")
+    lines.append("=" * 50)
+    lines.append("")
+    
+    for msg in messages:
+        role = "🧑 Student" if msg["role"] == "user" else "🤖 ProfeBot"
+        # Clean out suggestion markers
+        content = re.sub(r'///.*', '', msg["content"]).strip()
+        lines.append(f"{role}:")
+        lines.append(content)
+        lines.append("")
+    
+    lines.append("=" * 50)
+    lines.append(f"Exported from ProfeBot - SPAN1001 Tutor")
+    lines.append(f"Total messages: {len(messages)}")
+    
+    return "\n".join(lines)
+
+def export_conversation_md(messages: list) -> str:
+    """Export conversation to Markdown format."""
+    current_thread = get_current_thread()
+    lines = []
+    lines.append(f"# ProfeBot Conversation")
+    lines.append(f"**Title:** {current_thread['title']}")
+    lines.append(f"**Date:** {current_thread['created_at'].strftime('%Y-%m-%d %H:%M')}")
+    lines.append(f"**Language:** {st.session_state.preferred_language}")
+    lines.append("")
+    lines.append("---")
+    lines.append("")
+    
+    for msg in messages:
+        if msg["role"] == "user":
+            lines.append(f"### 🧑 Student")
+        else:
+            lines.append(f"### 🤖 ProfeBot")
+        # Clean out suggestion markers
+        content = re.sub(r'///.*', '', msg["content"]).strip()
+        lines.append(content)
+        lines.append("")
+    
+    lines.append("---")
+    lines.append(f"*Exported from ProfeBot - SPAN1001 Tutor | {len(messages)} messages*")
+    
+    return "\n".join(lines)
+    
+    return "\n".join(lines)
+
+# ==========================================
+# ANALYTICS FUNCTIONS
+# ==========================================
+def load_analytics() -> Dict:
+    """Load analytics data from file."""
+    try:
+        if ANALYTICS_FILE.exists():
+            with open(ANALYTICS_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+    except Exception as e:
+        logger.error(f"Error loading analytics: {e}")
+    return {
+        "total_messages": 0,
+        "total_sessions": 0,
+        "questions_by_topic": {},
+        "questions_by_unit": {},
+        "daily_usage": {},
+        "response_times": [],
+        "popular_quick_actions": {}
+    }
+
+def save_analytics(analytics: Dict):
+    """Save analytics data to file."""
+    try:
+        with open(ANALYTICS_FILE, "w", encoding="utf-8") as f:
+            json.dump(analytics, f, ensure_ascii=False, indent=2)
+        logger.info("Analytics saved")
+    except Exception as e:
+        logger.error(f"Error saving analytics: {e}")
+
+def track_message(user_message: str, response_time: float = 0):
+    """Track a user message for analytics."""
+    analytics = load_analytics()
+    
+    # Update total messages
+    analytics["total_messages"] = analytics.get("total_messages", 0) + 1
+    
+    # Track daily usage
+    today = datetime.now().strftime("%Y-%m-%d")
+    if "daily_usage" not in analytics:
+        analytics["daily_usage"] = {}
+    analytics["daily_usage"][today] = analytics["daily_usage"].get(today, 0) + 1
+    
+    # Track response time (keep last 100)
+    if response_time > 0:
+        if "response_times" not in analytics:
+            analytics["response_times"] = []
+        analytics["response_times"].append(response_time)
+        analytics["response_times"] = analytics["response_times"][-100:]
+    
+    # Detect topic keywords
+    topics = {
+        "grammar": ["gramática", "grammar", "verb", "conjugat", "tense"],
+        "vocabulary": ["vocabulario", "vocabulary", "word", "palabra", "meaning"],
+        "pronunciation": ["pronuncia", "sound", "accent"],
+        "culture": ["cultura", "culture", "spain", "españa", "mexico"],
+        "exercises": ["ejercicio", "exercise", "practice", "quiz", "task"]
+    }
+    
+    message_lower = user_message.lower()
+    for topic, keywords in topics.items():
+        if any(kw in message_lower for kw in keywords):
+            if "questions_by_topic" not in analytics:
+                analytics["questions_by_topic"] = {}
+            analytics["questions_by_topic"][topic] = analytics["questions_by_topic"].get(topic, 0) + 1
+    
+    # Detect unit references
+    for i in range(1, 15):
+        if f"unit {i}" in message_lower or f"unidad {i}" in message_lower:
+            if "questions_by_unit" not in analytics:
+                analytics["questions_by_unit"] = {}
+            unit_key = f"Unit {i}"
+            analytics["questions_by_unit"][unit_key] = analytics["questions_by_unit"].get(unit_key, 0) + 1
+    
+    save_analytics(analytics)
+
+def track_quick_action(action_name: str):
+    """Track quick action button usage."""
+    analytics = load_analytics()
+    if "popular_quick_actions" not in analytics:
+        analytics["popular_quick_actions"] = {}
+    analytics["popular_quick_actions"][action_name] = analytics["popular_quick_actions"].get(action_name, 0) + 1
+    save_analytics(analytics)
+
+def get_analytics_summary() -> Dict:
+    """Get a summary of analytics for display."""
+    analytics = load_analytics()
+    
+    # Calculate average response time
+    response_times = analytics.get("response_times", [])
+    avg_response = sum(response_times) / len(response_times) if response_times else 0
+    
+    # Get top topics
+    topics = analytics.get("questions_by_topic", {})
+    top_topics = sorted(topics.items(), key=lambda x: x[1], reverse=True)[:5]
+    
+    # Get usage last 7 days
+    daily = analytics.get("daily_usage", {})
+    today = datetime.now()
+    last_7_days = 0
+    for i in range(7):
+        day = (today - timedelta(days=i)).strftime("%Y-%m-%d")
+        last_7_days += daily.get(day, 0)
+    
+    return {
+        "total_messages": analytics.get("total_messages", 0),
+        "avg_response_time": round(avg_response, 2),
+        "top_topics": top_topics,
+        "messages_last_7_days": last_7_days,
+        "popular_actions": sorted(
+            analytics.get("popular_quick_actions", {}).items(), 
+            key=lambda x: x[1], 
+            reverse=True
+        )[:3]
+    }
+
+# ==========================================
 # THREAD MANAGEMENT FUNCTIONS
 # ==========================================
 def create_new_thread():
@@ -603,7 +778,7 @@ if not st.session_state.context_loaded:
 # ==========================================
 # CORE PROCESSING FUNCTION
 # ==========================================
-def process_user_input(user_text: str):
+def process_user_input(user_text: str, quick_action: str = None):
     """Process user input and get AI response."""
     if not user_text or user_text.strip() == "":
         return
@@ -623,7 +798,12 @@ def process_user_input(user_text: str):
     current_thread["messages"].append({"role": "user", "content": user_text})
     st.session_state.message_count += 1
     
+    # Track quick action if provided
+    if quick_action:
+        track_quick_action(quick_action)
+    
     # Get AI response with conversation history
+    start_time = time.time()
     with st.spinner("🤔 Thinking..."):
         # Get messages before adding the current one (for history)
         history_messages = current_thread["messages"][:-1]  # Exclude the just-added user message
@@ -644,9 +824,14 @@ def process_user_input(user_text: str):
         # Clean response
         clean_response = re.sub(r'///.*', '', raw_response).strip()
     
+    response_time = time.time() - start_time
+    
     # Add AI message
     current_thread["messages"].append({"role": "assistant", "content": clean_response})
     st.session_state.message_count += 1
+    
+    # Track analytics
+    track_message(user_text, response_time)
     
     # Save threads after each interaction
     save_threads_to_file()
@@ -772,6 +957,54 @@ with st.sidebar:
         st.divider()
         st.caption(f"Model: {DEPLOYMENT_ID}")
         st.caption(f"Temp: 0.4 | Tokens: 1000")
+    
+    # Export Conversations
+    with st.expander("📥 Export Chat", expanded=False):
+        st.markdown("**Download conversation**")
+        current_thread = get_current_thread()
+        
+        # Export as TXT
+        txt_content = export_conversation_txt(current_thread["messages"])
+        st.download_button(
+            label="📄 Download TXT",
+            data=txt_content,
+            file_name=f"profebot_chat_{datetime.now().strftime('%Y%m%d_%H%M')}.txt",
+            mime="text/plain",
+            use_container_width=True
+        )
+        
+        # Export as Markdown
+        md_content = export_conversation_md(current_thread["messages"])
+        st.download_button(
+            label="📝 Download Markdown",
+            data=md_content,
+            file_name=f"profebot_chat_{datetime.now().strftime('%Y%m%d_%H%M')}.md",
+            mime="text/markdown",
+            use_container_width=True
+        )
+    
+    # Analytics / Usage Stats
+    with st.expander("📊 Usage Stats", expanded=False):
+        analytics = get_analytics_summary()
+        
+        st.markdown("**📈 Your Statistics**")
+        col_stat1, col_stat2 = st.columns(2)
+        with col_stat1:
+            st.metric("Messages", analytics["total_messages"])
+        with col_stat2:
+            st.metric("Sessions", analytics["total_sessions"])
+        
+        st.metric("Avg Response", f"{analytics['avg_response_time']:.1f}s")
+        
+        if analytics["top_topics"]:
+            st.markdown("**🎯 Top Topics**")
+            for topic, count in analytics["top_topics"][:5]:
+                st.caption(f"• {topic}: {count}")
+        
+        if analytics["popular_actions"]:
+            st.markdown("**⚡ Popular Actions**")
+            for action, count in analytics["popular_actions"][:3]:
+                st.caption(f"• {action}: {count}")
     
     # About
     with st.expander("ℹ️ About"):
@@ -939,7 +1172,7 @@ with c0:
 2. **Conversation Task** - Simple conversation questions to practice speaking. Instructions should be in my preferred language.
 3. **Grammar & Vocabulary Task** - Exercises based on the activity bank. Instructions should be in my preferred language.
 
-Also ask me which unit I want to practice. Wait for my response before creating the task.""")
+Also ask me which unit I want to practice. Wait for my response before creating the task.""", quick_action="Tasks")
         st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -948,28 +1181,28 @@ with c1:
     if st.button("📝 Quiz", use_container_width=True, key="qa_quiz"): 
         process_user_input("""CMD_QUIZ: I want to take a quiz. Please ask me what topic or vocabulary I want to practice from the active units. 
 
-IMPORTANT: When you give me the quiz questions, do NOT provide the answers. Wait for me to respond with my answers first, then give me feedback on each one.""")
+IMPORTANT: When you give me the quiz questions, do NOT provide the answers. Wait for me to respond with my answers first, then give me feedback on each one.""", quick_action="Quiz")
         st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
 with c2:
     st.markdown('<div class="quick-action-btn">', unsafe_allow_html=True)
     if st.button("➕ Examples", use_container_width=True, key="qa_examples"): 
-        process_user_input("CMD_EXAMPLES: Give me 3 examples using active vocabulary.")
+        process_user_input("CMD_EXAMPLES: Give me 3 examples using active vocabulary.", quick_action="Examples")
         st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
 with c3:
     st.markdown('<div class="quick-action-btn">', unsafe_allow_html=True)
     if st.button("🧐 Explain more", use_container_width=True, key="qa_explain"): 
-        process_user_input("CMD_EXPLAIN_MORE: Please elaborate a bit more on what we were just discussing. Go slightly deeper into the topic, provide additional context or examples, but keep it at my level.")
+        process_user_input("CMD_EXPLAIN_MORE: Please elaborate a bit more on what we were just discussing. Go slightly deeper into the topic, provide additional context or examples, but keep it at my level.", quick_action="Explain More")
         st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
 with c4:
     st.markdown('<div class="quick-action-btn">', unsafe_allow_html=True)
     if st.button("💬 Roleplay", use_container_width=True, key="qa_roleplay"): 
-        process_user_input("CMD_ROLEPLAY: Let's start a short conversation.")
+        process_user_input("CMD_ROLEPLAY: Let's start a short conversation.", quick_action="Roleplay")
         st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
