@@ -4,19 +4,27 @@
 /* Google Font Import */
 @import url('https://fonts.googleapis.com/css2?family=WDXL+Lubrifont+TC&display=swap');
 
-/* CSS Variables for Dark Mode */
+/* CSS Variables for Dark Mode - HKU Official Colors */
 :root {
+    /* HKU Color Palette */
+    --hku-green-dark: #0e4236;
+    --hku-green-light: #00A86B;
+    --hku-blue: #0077C8;
+    --hku-yellow: #FFD100;
+    --hku-brown: #3D2B1F;
+    
     --bg-color: #0d1117;
     --secondary-bg: #161b22;
     --text-color: #f0f6fc;
     --text-secondary: #8b949e;
     --panel-bg: rgba(22, 27, 34, 0.92);
-    --panel-border: rgba(48, 54, 61, 0.8);
+    --panel-border: rgba(0, 168, 107, 0.3);
     --item-bg: rgba(33, 38, 45, 0.9);
-    --item-hover: rgba(48, 54, 61, 0.95);
-    --title-border: #58a6ff;
-    --accent-color: #58a6ff;
-    --accent-gradient: linear-gradient(135deg, #58a6ff 0%, #a371f7 100%);
+    --item-hover: rgba(0, 168, 107, 0.15);
+    --title-border: #00A86B;
+    --accent-color: #00A86B;
+    --accent-secondary: #0077C8;
+    --accent-gradient: linear-gradient(135deg, #00A86B 0%, #0077C8 100%);
     --sidebar-bg: #161b22;
     --header-bg: #0d1117;
     --input-bg: #21262d;
@@ -123,8 +131,8 @@ header, [data-testid="stHeader"] {
 .history-item:hover {
     background: var(--item-hover);
     transform: translateX(-3px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    border-left-color: #a371f7;
+    box-shadow: 0 4px 12px rgba(0,168,107,0.3);
+    border-left-color: #0077C8;
 }
 
 .history-item:active {
@@ -163,7 +171,7 @@ header, [data-testid="stHeader"] {
     -webkit-text-fill-color: transparent;
     background-clip: text;
     margin-bottom: 0.5rem !important;
-    text-shadow: 0 0 30px rgba(88, 166, 255, 0.3);
+    text-shadow: 0 0 30px rgba(0, 168, 107, 0.3);
 }
 
 .custom-subtitle {
@@ -339,7 +347,7 @@ header, [data-testid="stHeader"] {
 
 .stTextInput input:focus, [data-testid="stChatInput"] textarea:focus {
     border-color: var(--accent-color) !important;
-    box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.2) !important;
+    box-shadow: 0 0 0 2px rgba(0, 168, 107, 0.25) !important;
 }
 
 /* ===== BUTTONS ===== */
@@ -392,9 +400,9 @@ header, [data-testid="stHeader"] {
 }
 
 .status-success {
-    background-color: rgba(46, 160, 67, 0.2);
-    color: #3fb950;
-    border: 1px solid #238636;
+    background-color: rgba(0, 168, 107, 0.2);
+    color: #00A86B;
+    border: 1px solid #0e4236;
 }
 
 .status-error {
@@ -527,6 +535,53 @@ footer {
 
 footer, footer * {
     color: var(--text-secondary) !important;
+}
+
+/* ===== DOWNLOAD BUTTONS ===== */
+/* Fix for download buttons in dark mode - white background with white text issue */
+.stDownloadButton button,
+[data-testid="stDownloadButton"] button,
+[data-testid="stDownloadButton"] > button {
+    background-color: var(--secondary-bg) !important;
+    color: var(--text-color) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 8px !important;
+    transition: all 0.3s ease !important;
+}
+
+.stDownloadButton button span,
+.stDownloadButton button p,
+.stDownloadButton button div,
+[data-testid="stDownloadButton"] button span,
+[data-testid="stDownloadButton"] button p,
+[data-testid="stDownloadButton"] button div {
+    color: var(--text-color) !important;
+}
+
+.stDownloadButton button:hover,
+[data-testid="stDownloadButton"] button:hover {
+    background-color: var(--item-hover) !important;
+    border-color: var(--accent-color) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.stDownloadButton button:active,
+[data-testid="stDownloadButton"] button:active {
+    transform: translateY(0);
+}
+
+/* Ensure all button-like elements in expanders have correct styling */
+[data-testid="stExpander"] .stDownloadButton button,
+[data-testid="stExpander"] [data-testid="stDownloadButton"] button {
+    background-color: var(--secondary-bg) !important;
+    color: var(--text-color) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+[data-testid="stExpander"] .stDownloadButton button span,
+[data-testid="stExpander"] [data-testid="stDownloadButton"] button span {
+    color: var(--text-color) !important;
 }
 
 /* ===== RESPONSIVE ===== */
