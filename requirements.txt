@@ -1,3 +1,4 @@
 streamlit
 requests
 notion-client
+python-docx
