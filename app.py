@@ -49,7 +49,7 @@ except:
     favicon = "🎓"
 
 st.set_page_config(
-    page_title="ProfeBot - SPAN1001 Tutor",
+    page_title="ProfeBot - Spanish Year 1 Tutor",
     page_icon=favicon,
     layout="wide",
     initial_sidebar_state="expanded"
@@ -267,15 +267,15 @@ def get_weekly_content() -> str:
             name = get_text_safe("Nombre")
             lexicon = get_text_safe("Léxico")
             grammar = get_text_safe("Gramática")
-            communication = get_text_safe("Comunicación")
+            tags = get_text_safe("Tags")
             exercises = get_text_safe("Ejercicios")
 
             if name:  # Only add unit if it has a name
                 full_context += f"""
 === UNIT: {name} ===
+[TAGS]: {tags or 'No tags listed'}
 [VOCABULARY]: {lexicon or 'No vocabulary listed'}
 [GRAMMAR]: {grammar or 'No grammar listed'}
-[COMMUNICATION]: {communication or 'No communication topics listed'}
 [APPROVED EXERCISES]: {exercises or 'No exercises listed'}
 ==============================
 """
@@ -311,7 +311,7 @@ def get_ai_response(user_message: str, notion_context: str, language: str, custo
     
     system_prompt = f"""
 [ROLE AND PROFILE]
-You are "ProfeBot", the official Spanish Tutor for SPAN1001 at the University of Hong Kong (HKU).
+You are "ProfeBot", the official Spanish Tutor for Spanish Year 1 at the University of Hong Kong (HKU).
 
 **WHO YOU ARE:**
 - An exceptional Spanish as a Foreign Language (ELE) teacher with a passion for making Spanish accessible and fun
@@ -366,6 +366,14 @@ The student's preferred language setting is: **{language_instruction}**
    - You are STRICTLY FORBIDDEN from using vocabulary, verb tenses, or grammar rules that do not appear in the "ACTIVE CONTENT" list below.
    - If the student asks about something advanced (e.g., "fui" - past tense), congratulate their curiosity but explain IN THEIR PREFERRED LANGUAGE that it belongs to future levels and rephrase using ONLY what they know now.
 
+[🎯 SMART ROUTING SYSTEM - USE TAGS]
+When a student asks a question, follow this process:
+1. **FIRST**: Read the [TAGS] section of each unit - these contain key concepts, themes, and topics covered in that unit.
+2. **IDENTIFY**: Match the student's question to the most relevant unit(s) based on the tags.
+3. **THEN**: Look into the [VOCABULARY] and [GRAMMAR] sections of the identified unit(s) to provide accurate, curriculum-aligned answers.
+4. **EXAMPLE**: If a student asks about "numbers" or "age", check which unit has tags related to numbers/age, then use ONLY the vocabulary and grammar from that unit.
+5. **MULTIPLE UNITS**: If the topic spans multiple units, combine information from all relevant units but clearly indicate which content comes from which unit.
+
 [TASK GENERATION SYSTEM]
 When the user requests a TASK (CMD_TASKS), follow this protocol:
 ⚠️ LANGUAGE REMINDER: ALL instructions, questions, and feedback MUST be in the STUDENT'S PREFERRED LANGUAGE. Only the Spanish text/vocabulary being practiced should be in Spanish.
@@ -406,9 +414,9 @@ When the user requests CMD_EXPLAIN_MORE:
 ⚠️ LANGUAGE REMINDER: Explain all resources IN THE STUDENT'S PREFERRED LANGUAGE.
 
 When students ask about external tools, apps, games, or resources to practice Spanish:
-1. **FIRST PRIORITY - HKU TEACHER-DESIGNED GAMES**: Enthusiastically recommend the digital games created specifically for SPAN1001 by your teachers:
+1. **FIRST PRIORITY - HKU TEACHER-DESIGNED GAMES**: Enthusiastically recommend the digital games created specifically for Spanish Year 1 by your teachers:
    - 🤖 **The CONJUGATOR**: A game designed by HKU teachers to practice verb conjugation: https://conjugator.pablotorrado.site/
-   - 🟧🟩⬜ **Palabrero SPAN1001**: The daily Wordle of the course - practice vocabulary every day! https://span1001palabrero.netlify.app/
+   - 🟧🟩⬜ **Palabrero**: The daily Wordle of the course - practice vocabulary every day! https://span1001palabrero.netlify.app/
    - 🚢🧨 **Batalla Verbal (Battleship)**: A conjugation pairs game based on Battleship https://batallaverbal.netlify.app/
    - 🗺️ **Mapamundi**: A world geography game based on Unit 3 contents https://balpomorelitm.github.io/mapamundi/
    - All these games are available in the "General Information" section of the course Notion page
@@ -428,7 +436,7 @@ When students ask about external tools, apps, games, or resources to practice Sp
 3. **ALWAYS** direct students to check the "General Information" table in the course Notion database for the complete list of resources and direct links.
 
 [SYLLABUS & COURSE INFORMATION QUERIES]
-⚠️ IMPORTANT: When students ask about course logistics, syllabus, grading, assessment, schedule, office hours, policies, or any administrative information about SPAN1001:
+⚠️ IMPORTANT: When students ask about course logistics, syllabus, grading, assessment, schedule, office hours, policies, or any administrative information about Spanish Year 1 courses:
 
 1. **LOOK IN "INFO GENERAL" SECTION**: Direct your search to the unit/section called "INFO GENERAL" in the ACTIVE CONTENT below. This section contains official course information from the HKU Spanish program.
 
@@ -536,7 +544,7 @@ def initialize_session_state():
             "title": "New Conversation",
             "messages": [{
                 "role": "assistant", 
-                "content": "¡Hola! 👋 I am **ProfeBot**, your SPAN1001 tutor. Ask me about Spanish grammar, vocabulary, or the course!"
+                "content": "¡Hola! 👋 I am **ProfeBot**, your Spanish Year 1 tutor. Ask me about Spanish grammar, vocabulary, or the course!"
             }],
             "created_at": datetime.now(),
             "suggestions": []
@@ -653,7 +661,7 @@ def export_conversation_txt(messages: list) -> str:
         lines.append("")
     
     lines.append("=" * 50)
-    lines.append(f"Exported from ProfeBot - SPAN1001 Tutor")
+    lines.append(f"Exported from ProfeBot - Spanish Year 1 Tutor")
     lines.append(f"Total messages: {len(messages)}")
     
     return "\n".join(lines)
@@ -681,7 +689,7 @@ def export_conversation_md(messages: list) -> str:
         lines.append("")
     
     lines.append("---")
-    lines.append(f"*Exported from ProfeBot - SPAN1001 Tutor | {len(messages)} messages*")
+    lines.append(f"*Exported from ProfeBot - Spanish Year 1 Tutor | {len(messages)} messages*")
     
     return "\n".join(lines)
 
@@ -736,7 +744,7 @@ def export_conversation_docx(messages: list) -> BytesIO:
     
     # Footer
     doc.add_paragraph('_' * 50)
-    footer = doc.add_paragraph('Exported from ProfeBot - SPAN1001 Tutor')
+    footer = doc.add_paragraph('Exported from ProfeBot - Spanish Year 1 Tutor')
     footer.alignment = WD_ALIGN_PARAGRAPH.CENTER
     footer_run = footer.runs[0]
     footer_run.italic = True
@@ -1205,7 +1213,7 @@ with st.sidebar:
         - 🌐 Multilingual
         
         ---
-        Made with ❤️ for SPAN1001
+        Made with ❤️ for Spanish Year 1
         Powered by DeepSeek-V3
         """)
     
