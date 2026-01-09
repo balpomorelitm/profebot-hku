@@ -99,26 +99,50 @@ LANGUAGE_OPTIONS = {
 def load_secrets() -> Dict[str, str]:
     """Load secrets with fallback for local testing."""
     try:
+        hku_api_key = st.secrets["HKU_API_KEY"]
+        # Try to get GPT key, fallback to HKU_API_KEY if not found
+        try:
+            hku_gpt_key = st.secrets["HKU_GPT_KEY"]
+        except KeyError:
+            hku_gpt_key = hku_api_key
+            logger.warning("HKU_GPT_KEY not found, using HKU_API_KEY as fallback")
+        
         return {
             "NOTION_TOKEN": st.secrets["NOTION_TOKEN"],
             "DATABASE_ID": st.secrets["DATABASE_ID"],
-            "HKU_API_KEY": st.secrets["HKU_API_KEY"]
+            "HKU_API_KEY": hku_api_key,
+            "HKU_GPT_KEY": hku_gpt_key
         }
     except (FileNotFoundError, KeyError) as e:
         st.sidebar.error("⚠️ Missing secrets configuration")
         return {
             "NOTION_TOKEN": "your_notion_token_here",
             "DATABASE_ID": "your_database_id_here",
-            "HKU_API_KEY": "your_hku_api_key_here"
+            "HKU_API_KEY": "your_hku_api_key_here",
+            "HKU_GPT_KEY": "your_hku_gpt_key_here"
         }
 
 secrets = load_secrets()
 NOTION_TOKEN = secrets["NOTION_TOKEN"]
 DATABASE_ID = secrets["DATABASE_ID"]
-HKU_API_KEY = secrets["HKU_API_KEY"]
 
-DEPLOYMENT_ID = "DeepSeek-V3"
-HKU_ENDPOINT = "https://api.hku.hk/deepseek/models/chat/completions"
+# ==========================================
+# HYBRID ROUTER - MODEL CONFIGURATION
+# ==========================================
+# Fast Model (DeepSeek-V3) - For routing and simple queries
+MODEL_FAST_ID = "DeepSeek-V3"
+ENDPOINT_FAST = "https://api.hku.hk/deepseek/models/chat/completions"
+KEY_FAST = secrets["HKU_API_KEY"]
+
+# Smart Model (GPT-5.1) - For complex queries
+MODEL_SMART_ID = "gpt-5.1"
+ENDPOINT_SMART = "https://api.hkuesd.hku.hk/v2/openai/deployments/gpt-5.1/chat/completions?api-version=2024-02-15-preview"
+KEY_SMART = secrets["HKU_GPT_KEY"]
+
+# Legacy compatibility
+DEPLOYMENT_ID = MODEL_FAST_ID
+HKU_API_KEY = KEY_FAST
+HKU_ENDPOINT = ENDPOINT_FAST
 
 # ==========================================
 # HELPER FUNCTIONS
@@ -326,8 +350,131 @@ def get_weekly_content() -> str:
         return f"❌ Error parsing Notion data: {str(e)}"
 
 # ==========================================
-# AI CONNECTION
+# AI CONNECTION - HYBRID ROUTER SYSTEM
 # ==========================================
+def call_ai_model(
+    messages: List[Dict],
+    model_type: str = "fast",
+    max_tokens: int = 1000,
+    temperature: float = 0.4
+) -> Optional[str]:
+    """Call AI model with appropriate configuration for DeepSeek or Azure OpenAI.
+    
+    Args:
+        messages: List of message dicts with 'role' and 'content'
+        model_type: 'fast' for DeepSeek-V3, 'smart' for GPT-5.1
+        max_tokens: Maximum tokens in response
+        temperature: Response creativity (0-1)
+    
+    Returns:
+        Response content string or None if failed
+    """
+    if model_type == "smart":
+        # Azure OpenAI (GPT-5.1) configuration
+        headers = {
+            "Content-Type": "application/json",
+            "api-key": KEY_SMART
+        }
+        payload = {
+            "messages": messages,
+            "max_tokens": max_tokens,
+            "temperature": temperature
+        }
+        response = make_request_with_retry(
+            "POST",
+            ENDPOINT_SMART,
+            headers,
+            json_payload=payload
+        )
+    else:
+        # DeepSeek-V3 configuration
+        headers = {
+            "Content-Type": "application/json",
+            "Cache-Control": "no-cache",
+            "Ocp-Apim-Subscription-Key": KEY_FAST
+        }
+        payload = {
+            "model": MODEL_FAST_ID,
+            "messages": messages,
+            "max_tokens": max_tokens,
+            "temperature": temperature
+        }
+        response = make_request_with_retry(
+            "POST",
+            ENDPOINT_FAST,
+            headers,
+            json_payload=payload,
+            params={"deployment-id": MODEL_FAST_ID}
+        )
+    
+    if not response:
+        logger.error(f"No response from {model_type} model")
+        return None
+    
+    if response.status_code == 200:
+        try:
+            return response.json()['choices'][0]['message']['content']
+        except (KeyError, IndexError) as e:
+            logger.error(f"Unexpected API response format from {model_type}: {e}")
+            return None
+    else:
+        logger.error(f"{model_type} API Error ({response.status_code}): {response.text[:200]}")
+        return None
+
+
+def classify_query_complexity(user_message: str, conversation_history: List[Dict] = None) -> tuple:
+    """Use fast model to classify query as SIMPLE or COMPLEX.
+    
+    Returns:
+        Tuple of (classification: str, reasoning: str)
+    """
+    # Build context from recent history
+    history_context = ""
+    if conversation_history:
+        recent_msgs = conversation_history[-4:]  # Last 4 messages for context
+        history_context = "\n".join([f"{m['role']}: {m['content'][:200]}" for m in recent_msgs])
+    
+    router_prompt = f"""You are a query classifier for a Spanish language tutor chatbot. Analyze the user's query and classify it.
+
+CLASSIFY AS "SIMPLE" if the query is:
+- Basic vocabulary questions ("What does X mean?")
+- Simple greetings or casual conversation
+- Requests for examples of words they already know
+- Yes/no questions about Spanish basics
+- Requests to repeat or clarify previous information
+- Administrative questions about the course
+
+CLASSIFY AS "COMPLEX" if the query is:
+- Grammar explanations requiring detailed breakdowns
+- Requests for tasks, quizzes, or exercises (CMD_TASKS, CMD_QUIZ)
+- Comparisons between grammatical structures
+- Cultural explanations requiring nuance
+- Reading comprehension tasks
+- Roleplay or conversation practice (CMD_ROLEPLAY)
+- Questions about verb conjugation patterns
+- Requests for "more explanation" (CMD_EXPLAIN_MORE)
+- Any multi-step or creative content generation
+
+Recent conversation context:
+{history_context}
+
+User query: "{user_message}"
+
+Respond with ONLY one word: SIMPLE or COMPLEX"""
+
+    messages = [{"role": "user", "content": router_prompt}]
+    
+    result = call_ai_model(messages, model_type="fast", max_tokens=10, temperature=0.1)
+    
+    if result:
+        classification = "COMPLEX" if "COMPLEX" in result.upper() else "SIMPLE"
+        return classification
+    
+    # Default to SIMPLE if router fails
+    logger.warning("Router classification failed, defaulting to SIMPLE")
+    return "SIMPLE"
+
+
 def get_ai_response(user_message: str, notion_context: str, language: str, custom_language: str = "", conversation_history: List[Dict] = None) -> str:
     """Get AI response from HKU API with error handling and conversation history.
     
@@ -517,12 +664,6 @@ At the very end of your response, you MUST generate exactly 3 suggested follow-u
 {notion_context}
 """
 
-    headers = {
-        "Content-Type": "application/json",
-        "Cache-Control": "no-cache",
-        "Ocp-Apim-Subscription-Key": HKU_API_KEY
-    }
-    
     # Build messages array with conversation history
     messages = [{"role": "system", "content": system_prompt}]
     
@@ -534,7 +675,6 @@ At the very end of your response, you MUST generate exactly 3 suggested follow-u
             content = msg.get("content", "")
             # Clean out the /// suggestions from assistant messages
             if role == "assistant":
-                import re
                 content = re.sub(r'///.*', '', content).strip()
             if content:
                 messages.append({"role": role, "content": content})
@@ -544,31 +684,38 @@ At the very end of your response, you MUST generate exactly 3 suggested follow-u
     
     logger.info(f"Sending {len(messages)} messages to AI (including system prompt)")
     
-    payload = {
-        "model": DEPLOYMENT_ID,
-        "messages": messages,
-        "max_tokens": 1000,
-        "temperature": 0.4
-    }
-
-    response = make_request_with_retry(
-        "POST", 
-        HKU_ENDPOINT, 
-        headers, 
-        json_payload=payload,
-        params={"deployment-id": DEPLOYMENT_ID}
-    )
+    # ==========================================
+    # HYBRID ROUTER LOGIC
+    # ==========================================
+    # Step 1: Classify query complexity using fast model
+    complexity = classify_query_complexity(user_message, conversation_history)
+    logger.info(f"Query classified as: {complexity}")
     
-    if not response:
+    # Step 2: Select model based on complexity
+    if complexity == "COMPLEX":
+        # Try smart model first for complex queries
+        logger.info(f"Using SMART model ({MODEL_SMART_ID}) for complex query")
+        result = call_ai_model(messages, model_type="smart", max_tokens=1500, temperature=0.4)
+        
+        # Step 3: Failover to fast model if smart fails
+        if result is None:
+            logger.warning(f"SMART model failed, falling back to FAST model ({MODEL_FAST_ID})")
+            result = call_ai_model(messages, model_type="fast", max_tokens=1000, temperature=0.4)
+            model_used = f"{MODEL_FAST_ID} (fallback)"
+        else:
+            model_used = MODEL_SMART_ID
+    else:
+        # Use fast model for simple queries
+        logger.info(f"Using FAST model ({MODEL_FAST_ID}) for simple query")
+        result = call_ai_model(messages, model_type="fast", max_tokens=1000, temperature=0.4)
+        model_used = MODEL_FAST_ID
+    
+    if result is None:
         return "❌ Failed to connect to AI service. Please try again later."
     
-    if response.status_code == 200:
-        try:
-            return response.json()['choices'][0]['message']['content']
-        except (KeyError, IndexError) as e:
-            return f"❌ Unexpected API response format: {str(e)}"
-    else:
-        return f"❌ HKU API Error ({response.status_code}): {response.text[:200]}"
+    # Inject router debug info (hidden in HTML comment for optional display)
+    router_info = f"<!--ROUTER_DEBUG:{complexity}|{model_used}-->"
+    return f"{result}\n{router_info}"
 
 # ==========================================
 # SESSION STATE INITIALIZATION
@@ -1043,6 +1190,17 @@ def process_user_input(user_text: str, quick_action: str = None):
             conversation_history=history_messages
         )
         
+        # Extract router debug info
+        router_match = re.search(r'<!--ROUTER_DEBUG:([^|]+)\|([^>]+)-->', raw_response)
+        if router_match:
+            st.session_state.last_router_info = {
+                "complexity": router_match.group(1),
+                "model": router_match.group(2)
+            }
+            raw_response = re.sub(r'<!--ROUTER_DEBUG:[^>]+-->', '', raw_response)
+        else:
+            st.session_state.last_router_info = None
+        
         # Extract suggestions
         suggestions = re.findall(r'///\s*(.*)', raw_response)
         suggestions = [s.strip() for s in suggestions if s.strip()][:3]
@@ -1258,9 +1416,12 @@ with st.sidebar:
         - 💬 Interactive
         - 🌐 Multilingual
         
+        **Hybrid AI System:**
+        - 🚀 DeepSeek-V3 (Fast)
+        - 🧠 GPT-5.1 (Complex)
+        
         ---
         Made with ❤️ for Spanish Year 1
-        Powered by DeepSeek-V3
         """)
     
     # Department Link
@@ -1397,6 +1558,12 @@ if current_thread["suggestions"] and len(current_thread["messages"]) > 1:
                 ):
                     process_user_input(suggestion)
                     st.rerun()
+
+# Display router debug info (small caption)
+if hasattr(st.session_state, 'last_router_info') and st.session_state.last_router_info:
+    router_info = st.session_state.last_router_info
+    model_emoji = "🚀" if "DeepSeek" in router_info["model"] else "🧠"
+    st.caption(f"{model_emoji} Router: {router_info['complexity']} → Using {router_info['model']}")
 
 # Quick action buttons
 st.divider()
