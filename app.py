@@ -349,7 +349,7 @@ def track_user_interaction(user_message: str, ai_response: str):
     message_lower = user_message.lower()
     
     # Check for corrections/errors
-    has_correction = any(re.search(r"(?:actually|correction|careful|incorrecto|mistake)", response_lower))
+    has_correction = bool(re.search(r"(?:actually|correction|careful|incorrecto|mistake)", response_lower))
     
     if has_correction:
         for pattern, topic in correction_indicators:
