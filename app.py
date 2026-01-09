@@ -198,12 +198,13 @@ def make_request_with_retry(
                 st.error(f"⏱️ Request timeout after {max_retries} attempts")
                 return None
                 
-        except requests.exceptions.ConnectionError:
+        except requests.exceptions.ConnectionError as e:
             if attempt < max_retries - 1:
                 time.sleep(RETRY_DELAY * (attempt + 1))
                 continue
             else:
                 st.error(f"🔌 Connection error after {max_retries} attempts")
+                logger.error(f"Connection error to {url}: {str(e)}")
                 return None
                 
         except Exception as e:
