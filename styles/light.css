@@ -1,72 +1,71 @@
-/* ===== LIGHT MODE STYLES ===== */
-/* ProfeBot - SPAN1001 Tutor */
+/* ===== LIGHT MODE STYLES - MINIMALIST ===== */
+/* ProfeBot - Spanish Year 1 Tutor */
+/* Inspired by Gemini's clean, modern design */
 
-/* Google Font Import */
-@import url('https://fonts.googleapis.com/css2?family=WDXL+Lubrifont+TC&display=swap');
+/* Google Font Import - Using Inter for a cleaner look */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
-/* CSS Variables for Light Mode - HKU Official Colors */
+/* CSS Variables for Light Mode - Minimalist Palette */
 :root {
-    /* HKU Color Palette */
-    --hku-green-dark: #0e4236;
-    --hku-green-light: #00A86B;
-    --hku-blue: #0077C8;
-    --hku-yellow: #FFD100;
-    --hku-brown: #3D2B1F;
-    
+    /* Base Colors - Clean whites and grays */
     --bg-color: #ffffff;
-    --secondary-bg: #f6f8fa;
-    --text-color: #24292f;
-    --text-secondary: #57606a;
-    --panel-bg: rgba(255, 255, 255, 0.92);
-    --panel-border: rgba(14, 66, 54, 0.3);
-    --item-bg: rgba(246, 248, 250, 0.9);
-    --item-hover: rgba(14, 66, 54, 0.1);
-    --title-border: #0e4236;
-    --accent-color: #0e4236;
-    --accent-secondary: #0077C8;
-    --accent-gradient: linear-gradient(135deg, #0e4236 0%, #00A86B 100%);
-    --sidebar-bg: #f6f8fa;
-    --header-bg: #ffffff;
-    --input-bg: #f6f8fa;
-    --border-color: #d0d7de;
+    --secondary-bg: #f0f4f9;
+    --tertiary-bg: #e8eaed;
+    --surface-color: #f8f9fa;
+    
+    /* Text */
+    --text-color: #1f1f1f;
+    --text-secondary: #5f6368;
+    --text-muted: #9aa0a6;
+    
+    /* Accent - Google Blue */
+    --accent-color: #1a73e8;
+    --accent-hover: rgba(26, 115, 232, 0.12);
+    --accent-subtle: rgba(26, 115, 232, 0.06);
+    
+    /* Borders - Very subtle */
+    --border-color: rgba(0, 0, 0, 0.08);
+    --border-hover: rgba(0, 0, 0, 0.12);
+    
+    /* Shadows - Minimal */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.08);
+    
+    /* Spacing */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-full: 24px;
 }
 
-/* ===== SIDEBAR COMPLETE STYLING ===== */
+/* ===== GLOBAL STYLES ===== */
+html, body, [data-testid="stAppViewContainer"], [data-testid="stApp"], .stApp {
+    background-color: var(--bg-color) !important;
+    color: var(--text-color) !important;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+
+* {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+
+/* ===== SIDEBAR - Clean & Minimal ===== */
 [data-testid="stSidebar"] {
-    background-color: var(--sidebar-bg) !important;
-    border-right: 1px solid var(--border-color) !important;
+    background-color: var(--bg-color) !important;
+    border-right: none !important;
 }
 
 [data-testid="stSidebar"] > div:first-child {
-    background-color: var(--sidebar-bg) !important;
-    padding-top: 0.5rem !important;
+    background-color: var(--bg-color) !important;
+    padding-top: 1rem !important;
 }
 
 [data-testid="stSidebar"] .block-container {
     padding: 0.5rem 1rem !important;
 }
 
-[data-testid="stSidebar"] [data-testid="stVerticalBlock"] > div {
-    margin-bottom: 0.3rem !important;
-}
-
-[data-testid="stSidebar"] hr {
-    margin: 0.5rem 0 !important;
-}
-
 [data-testid="stSidebar"] * {
     color: var(--text-color) !important;
-}
-
-/* Sidebar title with green text */
-.sidebar-title {
-    font-size: 1.3rem !important;
-    font-weight: 700 !important;
-    margin-bottom: 0.5rem !important;
-}
-
-.sidebar-title-text {
-    color: var(--accent-color) !important;
 }
 
 [data-testid="stSidebar"] .stMarkdown p,
@@ -80,69 +79,62 @@
 [data-testid="stSidebar"] h2,
 [data-testid="stSidebar"] h3 {
     color: var(--text-color) !important;
+    font-weight: 500 !important;
 }
 
-/* ===== HEADER / TOP BAR ===== */
+[data-testid="stSidebar"] hr {
+    border: none !important;
+    height: 1px !important;
+    background: var(--border-color) !important;
+    margin: 1rem 0 !important;
+}
+
+/* Sidebar title */
+.sidebar-title {
+    font-size: 1.1rem !important;
+    font-weight: 500 !important;
+    margin-bottom: 0.5rem !important;
+    color: var(--text-color) !important;
+}
+
+.sidebar-title-text {
+    color: var(--accent-color) !important;
+}
+
+/* ===== HEADER - Minimal ===== */
 header, [data-testid="stHeader"] {
-    background-color: var(--header-bg) !important;
-    border-bottom: 1px solid var(--border-color) !important;
+    background-color: var(--bg-color) !important;
+    border-bottom: none !important;
 }
 
-/* Fixed header title in Streamlit header bar */
 [data-testid="stHeader"]::before {
-    content: 'ProfeBot: SPAN1001 Interactive Tutor';
+    content: 'ProfeBot: Spanish Year 1 Interactive Tutor';
     position: absolute;
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
-    font-family: 'WDXL Lubrifont TC', sans-serif !important;
-    font-size: 1.2rem !important;
-    font-weight: 700 !important;
-    background: var(--accent-gradient);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 1rem !important;
+    font-weight: 500 !important;
+    color: var(--text-color) !important;
     z-index: 1000;
     white-space: nowrap;
+    letter-spacing: -0.01em;
 }
 
-/* History item clickable */
-.history-item {
-    padding: 12px;
-    margin: 8px 0;
-    background: var(--item-bg);
-    border-left: 3px solid var(--accent-color);
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 0.85rem;
-}
-
-.history-item:hover {
-    background: var(--item-hover);
-    transform: translateX(-3px);
-    box-shadow: 0 4px 12px rgba(14,66,54,0.2);
-    border-left-color: #00A86B;
-}
-
-.history-item:active {
-    transform: translateX(-5px) scale(0.98);
-}
-
-/* ===== MAIN CONTENT AREA ===== */
+/* ===== MAIN CONTENT ===== */
 .main, [data-testid="stMain"] {
     background-color: var(--bg-color) !important;
 }
 
 .main .block-container {
     padding-right: 320px;
-    padding-top: 1rem;
+    padding-top: 1.5rem;
     max-width: calc(100% - 300px);
     margin-right: 20px;
     background-color: var(--bg-color) !important;
 }
 
-/* All text in main area */
 .main p, .main span, .main div {
     color: var(--text-color) !important;
 }
@@ -151,25 +143,24 @@ header, [data-testid="stHeader"] {
     color: var(--text-secondary) !important;
 }
 
-/* ===== CUSTOM TITLE STYLING ===== */
+/* ===== CUSTOM TITLE ===== */
 .custom-title {
-    font-family: 'WDXL Lubrifont TC', sans-serif !important;
-    font-size: 2.5rem !important;
-    font-weight: 700 !important;
-    background: var(--accent-gradient);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-bottom: 0.5rem !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 2rem !important;
+    font-weight: 600 !important;
+    color: var(--text-color) !important;
+    margin-bottom: 0.25rem !important;
+    letter-spacing: -0.02em;
 }
 
 .custom-subtitle {
     color: var(--text-secondary) !important;
-    font-size: 1rem;
-    margin-top: -10px;
+    font-size: 0.95rem;
+    font-weight: 400;
+    margin-top: 0;
 }
 
-/* ===== FLOATING MESSAGE HISTORY PANEL ===== */
+/* ===== HISTORY PANEL - Floating, Minimal ===== */
 .message-history-panel {
     position: fixed;
     right: 20px;
@@ -178,74 +169,79 @@ header, [data-testid="stHeader"] {
     max-height: calc(100vh - 120px);
     min-height: 80px;
     height: auto;
-    background: var(--panel-bg);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid var(--panel-border);
-    border-radius: 16px;
-    padding: 15px;
+    background: var(--secondary-bg);
+    border: none;
+    border-radius: var(--radius-lg);
+    padding: 16px;
     overflow-y: auto;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.12);
     z-index: 999;
-    transition: all 0.3s ease;
 }
 
 .message-history-panel::-webkit-scrollbar {
-    width: 6px;
+    width: 4px;
 }
 
 .message-history-panel::-webkit-scrollbar-track {
     background: transparent;
-    border-radius: 10px;
 }
 
 .message-history-panel::-webkit-scrollbar-thumb {
-    background: var(--border-color);
-    border-radius: 10px;
+    background: var(--border-hover);
+    border-radius: 4px;
 }
 
-.message-history-panel::-webkit-scrollbar-thumb:hover {
-    background: var(--accent-color);
+.history-item {
+    padding: 12px 14px;
+    margin: 6px 0;
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: background 0.15s ease;
+    font-size: 0.875rem;
+}
+
+.history-item:hover {
+    background: var(--accent-subtle);
 }
 
 .history-item-time {
     font-size: 0.7rem;
-    color: var(--text-secondary);
+    color: var(--text-muted);
     margin-bottom: 4px;
 }
 
 .history-item-text {
     color: var(--text-color);
-    line-height: 1.4;
+    line-height: 1.5;
     display: -webkit-box;
-    -webkit-line-clamp: 3;
+    -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
 
 .history-panel-title {
-    font-size: 1rem;
-    font-weight: 600;
-    margin-bottom: 15px;
-    padding-bottom: 10px;
-    border-bottom: 2px solid var(--title-border);
-    color: var(--text-color);
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-bottom: 12px;
+    padding-bottom: 0;
+    border-bottom: none;
+    color: var(--text-secondary);
 }
 
 .history-count {
     font-size: 0.75rem;
-    color: var(--text-secondary);
-    font-weight: normal;
+    color: var(--text-muted);
+    font-weight: 400;
 }
 
-/* ===== CHAT MESSAGES ===== */
+/* ===== CHAT MESSAGES - Clean ===== */
 .stChatMessage {
-    padding: 1rem;
-    border-radius: 12px;
-    margin-bottom: 0.5rem;
-    scroll-margin-top: 100px;
-    background-color: var(--secondary-bg) !important;
-    border: 1px solid var(--border-color);
+    padding: 1rem 0;
+    border-radius: 0;
+    margin-bottom: 0;
+    background-color: transparent !important;
+    border: none !important;
 }
 
 .stChatMessage p, .stChatMessage span, .stChatMessage div,
@@ -253,36 +249,43 @@ header, [data-testid="stHeader"] {
     color: var(--text-color) !important;
 }
 
-/* Force all markdown text in chat to be visible */
+[data-testid="stChatMessage"] {
+    background-color: transparent !important;
+    border: none !important;
+}
+
 [data-testid="stChatMessage"] * {
     color: var(--text-color) !important;
 }
 
 [data-testid="stChatMessage"] code {
-    background-color: var(--input-bg) !important;
+    background-color: var(--tertiary-bg) !important;
     color: var(--accent-color) !important;
+    padding: 2px 6px;
+    border-radius: 4px;
 }
 
-/* ===== INPUT FIELDS ===== */
+/* ===== INPUT FIELDS - Gemini Style ===== */
 .stTextInput input, [data-testid="stChatInput"] textarea {
-    background-color: var(--input-bg) !important;
+    background-color: var(--secondary-bg) !important;
     color: var(--text-color) !important;
-    border: 1px solid var(--border-color) !important;
-    border-radius: 8px !important;
+    border: none !important;
+    border-radius: var(--radius-full) !important;
+    padding: 12px 20px !important;
+    font-size: 0.95rem !important;
 }
 
-/* Chat input container/wrapper */
 [data-testid="stChatInput"] {
     background-color: var(--bg-color) !important;
-    border-color: var(--border-color) !important;
+    border: none !important;
 }
 
 [data-testid="stChatInput"] > div {
-    background-color: var(--input-bg) !important;
-    border-color: var(--border-color) !important;
+    background-color: var(--secondary-bg) !important;
+    border: none !important;
+    border-radius: var(--radius-full) !important;
 }
 
-/* Bottom chat input area */
 [data-testid="stBottom"] {
     background-color: var(--bg-color) !important;
 }
@@ -295,242 +298,108 @@ header, [data-testid="stHeader"] {
     background-color: var(--bg-color) !important;
 }
 
-/* ===== SELECTBOX STYLING ===== */
+.stTextInput input:focus, [data-testid="stChatInput"] textarea:focus {
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+/* ===== SELECTBOX - Minimal ===== */
 .stSelectbox > div > div {
-    background-color: var(--input-bg) !important;
+    background-color: var(--secondary-bg) !important;
     color: var(--text-color) !important;
-    border: 1px solid var(--border-color) !important;
+    border: none !important;
+    border-radius: var(--radius-md) !important;
 }
 
 .stSelectbox [data-baseweb="select"] {
-    background-color: var(--input-bg) !important;
+    background-color: var(--secondary-bg) !important;
 }
 
 .stSelectbox [data-baseweb="select"] > div {
-    background-color: var(--input-bg) !important;
+    background-color: var(--secondary-bg) !important;
     color: var(--text-color) !important;
-    border-color: var(--border-color) !important;
+    border: none !important;
 }
 
 .stSelectbox [data-baseweb="select"] span {
     color: var(--text-color) !important;
 }
 
-/* Dropdown menu */
 [data-baseweb="popover"] {
-    background-color: var(--secondary-bg) !important;
+    background-color: var(--bg-color) !important;
+    border: none !important;
+    border-radius: var(--radius-md) !important;
+    box-shadow: var(--shadow-md) !important;
 }
 
 [data-baseweb="popover"] li {
-    background-color: var(--secondary-bg) !important;
+    background-color: transparent !important;
     color: var(--text-color) !important;
 }
 
 [data-baseweb="popover"] li:hover {
-    background-color: var(--item-hover) !important;
+    background-color: var(--accent-subtle) !important;
 }
 
-.stTextInput input:focus, [data-testid="stChatInput"] textarea:focus {
-    border-color: var(--accent-color) !important;
-    box-shadow: 0 0 0 2px rgba(14, 66, 54, 0.2) !important;
-}
-
-/* ===== BUTTONS ===== */
+/* ===== BUTTONS - Pill Style (Gemini Chips) ===== */
 .stButton button {
-    width: 100%;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-    font-size: 0.9rem;
+    width: auto;
+    border-radius: var(--radius-full) !important;
+    transition: background 0.15s ease !important;
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
     background-color: var(--secondary-bg) !important;
     color: var(--text-color) !important;
-    border: 1px solid var(--border-color) !important;
+    border: none !important;
+    padding: 10px 20px !important;
+    box-shadow: none !important;
 }
 
 .stButton button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    border-color: var(--accent-color) !important;
-    background-color: var(--item-hover) !important;
+    background-color: var(--tertiary-bg) !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+.stButton button:active {
+    background-color: var(--accent-subtle) !important;
 }
 
 .stButton button[kind="primary"] {
-    background: var(--accent-gradient) !important;
-    border: none !important;
-    color: white !important;
+    background-color: var(--accent-color) !important;
+    color: #ffffff !important;
 }
 
-/* Primary button text must be white */
+.stButton button[kind="primary"]:hover {
+    background-color: #1557b0 !important;
+}
+
 .stButton button[kind="primary"] span,
 .stButton button[kind="primary"] p,
 .stButton button[kind="primary"] div {
-    color: white !important;
+    color: #ffffff !important;
 }
 
-/* Quick action buttons */
+/* Quick action buttons - Chip style */
 .quick-action-btn button {
-    height: 45px !important;
-    font-weight: 500;
-    font-size: 0.8rem !important;
-    padding: 0.3rem 0.5rem !important;
+    height: auto !important;
+    font-weight: 500 !important;
+    font-size: 0.875rem !important;
+    padding: 10px 16px !important;
 }
 
-/* ===== STATUS INDICATORS ===== */
-.status-badge {
-    padding: 0.25rem 0.75rem;
-    border-radius: 12px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    display: inline-block;
-    margin: 0.25rem;
-}
-
-.status-success {
-    background-color: rgba(14, 66, 54, 0.15);
-    color: #0e4236;
-    border: 1px solid #0e4236;
-}
-
-.status-error {
-    background-color: #f8d7da;
-    color: #721c24;
-    border: 1px solid #721c24;
-}
-
-/* ===== EXPANDER ===== */
-.streamlit-expanderHeader {
-    background-color: var(--input-bg) !important;
-    color: var(--text-color) !important;
-    border-radius: 8px !important;
-    border: 1px solid var(--border-color) !important;
-}
-
-.streamlit-expanderHeader:hover {
-    background-color: var(--item-hover) !important;
-    border-color: var(--accent-color) !important;
-}
-
-.streamlit-expanderHeader p, .streamlit-expanderHeader span {
-    color: var(--text-color) !important;
-}
-
-.streamlit-expanderContent {
-    background-color: var(--secondary-bg) !important;
-    border: 1px solid var(--border-color) !important;
-    border-top: none !important;
-}
-
-.streamlit-expanderContent p, .streamlit-expanderContent span,
-.streamlit-expanderContent div, .streamlit-expanderContent label {
-    color: var(--text-color) !important;
-}
-
-/* New Streamlit expander selectors */
-[data-testid="stExpander"] {
-    background-color: var(--secondary-bg) !important;
-    border: 1px solid var(--border-color) !important;
-    border-radius: 8px !important;
-}
-
-[data-testid="stExpander"] > div:first-child {
-    background-color: var(--input-bg) !important;
-    border-radius: 8px !important;
-}
-
-[data-testid="stExpander"] details {
-    background-color: var(--secondary-bg) !important;
-}
-
-[data-testid="stExpander"] summary {
-    background-color: var(--input-bg) !important;
-    color: var(--text-color) !important;
-}
-
-[data-testid="stExpander"] details[open] > summary {
-    background-color: var(--input-bg) !important;
-}
-
-[data-testid="stExpander"] details > div {
-    background-color: var(--secondary-bg) !important;
-}
-
-/* Expander content captions */
-.streamlit-expanderContent .stCaption {
-    color: var(--text-secondary) !important;
-}
-
-/* ===== DIVIDERS ===== */
-hr {
-    border-color: var(--border-color) !important;
-}
-
-/* ===== METRICS ===== */
-[data-testid="stMetricValue"] {
-    color: var(--accent-color) !important;
-}
-
-[data-testid="stMetricLabel"] {
-    color: var(--text-secondary) !important;
-}
-
-/* Empty state */
-.empty-history {
-    text-align: center;
-    color: var(--text-secondary);
-    font-size: 0.85rem;
-    padding: 20px;
-    font-style: italic;
-}
-
-/* Loading animation */
-.loading-text {
-    animation: pulse 1.5s ease-in-out infinite;
-}
-
-@keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-}
-
-/* Department link styling */
-.dept-link {
-    text-align: center;
-    padding: 15px;
-    margin-top: 10px;
-    background: var(--item-bg);
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
-}
-
-.dept-link a {
-    color: var(--accent-color) !important;
-    text-decoration: none;
-    font-size: 0.9rem;
-    font-weight: 500;
-}
-
-.dept-link a:hover {
-    text-decoration: underline;
-}
-
-/* ===== FOOTER ===== */
-footer {
-    background-color: var(--bg-color) !important;
-}
-
-footer, footer * {
-    color: var(--text-secondary) !important;
-}
-
-/* ===== DOWNLOAD BUTTONS ===== */
-/* Explicit styling for download buttons */
+/* ===== DOWNLOAD BUTTONS - Same Chip Style ===== */
 .stDownloadButton button,
 [data-testid="stDownloadButton"] button,
 [data-testid="stDownloadButton"] > button {
     background-color: var(--secondary-bg) !important;
     color: var(--text-color) !important;
-    border: 1px solid var(--border-color) !important;
-    border-radius: 8px !important;
-    transition: all 0.3s ease !important;
+    border: none !important;
+    border-radius: var(--radius-full) !important;
+    transition: background 0.15s ease !important;
+    padding: 10px 20px !important;
+    font-weight: 500 !important;
 }
 
 .stDownloadButton button span,
@@ -544,23 +413,159 @@ footer, footer * {
 
 .stDownloadButton button:hover,
 [data-testid="stDownloadButton"] button:hover {
-    background-color: var(--item-hover) !important;
-    border-color: var(--accent-color) !important;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    background-color: var(--tertiary-bg) !important;
+    transform: none !important;
+    box-shadow: none !important;
 }
 
-/* Ensure download buttons in expanders have correct styling */
-[data-testid="stExpander"] .stDownloadButton button,
-[data-testid="stExpander"] [data-testid="stDownloadButton"] button {
-    background-color: var(--secondary-bg) !important;
-    color: var(--text-color) !important;
-    border: 1px solid var(--border-color) !important;
+/* ===== STATUS INDICATORS - Subtle ===== */
+.status-badge {
+    padding: 6px 12px;
+    border-radius: var(--radius-full);
+    font-size: 0.8rem;
+    font-weight: 500;
+    display: inline-block;
+    margin: 0.25rem;
+    border: none;
 }
 
-[data-testid="stExpander"] .stDownloadButton button span,
-[data-testid="stExpander"] [data-testid="stDownloadButton"] button span {
+.status-success {
+    background-color: rgba(52, 168, 83, 0.12);
+    color: #188038;
+}
+
+.status-error {
+    background-color: rgba(234, 67, 53, 0.12);
+    color: #c5221f;
+}
+
+/* ===== EXPANDER - Minimal ===== */
+.streamlit-expanderHeader {
+    background-color: transparent !important;
     color: var(--text-color) !important;
+    border-radius: var(--radius-md) !important;
+    border: none !important;
+}
+
+.streamlit-expanderHeader:hover {
+    background-color: var(--accent-subtle) !important;
+}
+
+.streamlit-expanderHeader p, .streamlit-expanderHeader span {
+    color: var(--text-color) !important;
+}
+
+.streamlit-expanderContent {
+    background-color: transparent !important;
+    border: none !important;
+}
+
+.streamlit-expanderContent p, .streamlit-expanderContent span,
+.streamlit-expanderContent div, .streamlit-expanderContent label {
+    color: var(--text-color) !important;
+}
+
+[data-testid="stExpander"] {
+    background-color: transparent !important;
+    border: none !important;
+    border-radius: var(--radius-md) !important;
+}
+
+[data-testid="stExpander"] > div:first-child {
+    background-color: transparent !important;
+}
+
+[data-testid="stExpander"] details {
+    background-color: transparent !important;
+}
+
+[data-testid="stExpander"] summary {
+    background-color: transparent !important;
+    color: var(--text-color) !important;
+    padding: 12px 0 !important;
+}
+
+[data-testid="stExpander"] summary:hover {
+    background-color: var(--accent-subtle) !important;
+    border-radius: var(--radius-md) !important;
+}
+
+[data-testid="stExpander"] details[open] > summary {
+    background-color: transparent !important;
+}
+
+[data-testid="stExpander"] details > div {
+    background-color: transparent !important;
+}
+
+.streamlit-expanderContent .stCaption {
+    color: var(--text-secondary) !important;
+}
+
+/* ===== DIVIDERS - Subtle ===== */
+hr {
+    border: none !important;
+    height: 1px !important;
+    background: var(--border-color) !important;
+    margin: 1.5rem 0 !important;
+}
+
+/* ===== METRICS ===== */
+[data-testid="stMetricValue"] {
+    color: var(--text-color) !important;
+    font-weight: 500 !important;
+}
+
+[data-testid="stMetricLabel"] {
+    color: var(--text-secondary) !important;
+}
+
+/* ===== EMPTY STATE ===== */
+.empty-history {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    padding: 24px;
+}
+
+/* ===== LOADING ===== */
+.loading-text {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* ===== DEPARTMENT LINK ===== */
+.dept-link {
+    text-align: center;
+    padding: 16px;
+    margin-top: 12px;
+    background: transparent;
+    border-radius: var(--radius-md);
+    border: none;
+}
+
+.dept-link a {
+    color: var(--accent-color) !important;
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.dept-link a:hover {
+    text-decoration: underline;
+}
+
+/* ===== FOOTER ===== */
+footer {
+    background-color: var(--bg-color) !important;
+}
+
+footer, footer * {
+    color: var(--text-muted) !important;
 }
 
 /* ===== RESPONSIVE ===== */
