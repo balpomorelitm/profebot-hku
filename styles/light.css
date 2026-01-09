@@ -3,6 +3,7 @@
 
 /* Google Font Import */
 @import url('https://fonts.googleapis.com/css2?family=WDXL+Lubrifont+TC&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 /* CSS Variables for Light Mode - HKU Official Colors */
 :root {
@@ -245,7 +246,7 @@ header, [data-testid="stHeader"] {
     margin-bottom: 0.5rem;
     scroll-margin-top: 100px;
     background-color: var(--secondary-bg) !important;
-    border: 1px solid var(--border-color);
+    border: none;
 }
 
 .stChatMessage p, .stChatMessage span, .stChatMessage div,
@@ -267,8 +268,8 @@ header, [data-testid="stHeader"] {
 .stTextInput input, [data-testid="stChatInput"] textarea {
     background-color: var(--input-bg) !important;
     color: var(--text-color) !important;
-    border: 1px solid var(--border-color) !important;
-    border-radius: 8px !important;
+    border: none !important;
+    border-radius: 20px !important;
 }
 
 /* Chat input container/wrapper */
@@ -299,7 +300,8 @@ header, [data-testid="stHeader"] {
 .stSelectbox > div > div {
     background-color: var(--input-bg) !important;
     color: var(--text-color) !important;
-    border: 1px solid var(--border-color) !important;
+    border: none !important;
+    border-radius: 12px !important;
 }
 
 .stSelectbox [data-baseweb="select"] {
@@ -309,7 +311,7 @@ header, [data-testid="stHeader"] {
 .stSelectbox [data-baseweb="select"] > div {
     background-color: var(--input-bg) !important;
     color: var(--text-color) !important;
-    border-color: var(--border-color) !important;
+    border: none !important;
 }
 
 .stSelectbox [data-baseweb="select"] span {
@@ -331,25 +333,23 @@ header, [data-testid="stHeader"] {
 }
 
 .stTextInput input:focus, [data-testid="stChatInput"] textarea:focus {
-    border-color: var(--accent-color) !important;
-    box-shadow: 0 0 0 2px rgba(14, 66, 54, 0.2) !important;
+    border: none !important;
+    box-shadow: none !important;
 }
 
 /* ===== BUTTONS ===== */
 .stButton button {
     width: 100%;
-    border-radius: 8px;
-    transition: all 0.3s ease;
+    border-radius: 20px;
+    transition: background 0.2s ease;
     font-size: 0.9rem;
+    font-weight: 500;
     background-color: var(--secondary-bg) !important;
     color: var(--text-color) !important;
-    border: 1px solid var(--border-color) !important;
+    border: none !important;
 }
 
 .stButton button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    border-color: var(--accent-color) !important;
     background-color: var(--item-hover) !important;
 }
 
@@ -387,13 +387,11 @@ header, [data-testid="stHeader"] {
 .status-success {
     background-color: rgba(14, 66, 54, 0.15);
     color: #0e4236;
-    border: 1px solid #0e4236;
 }
 
 .status-error {
     background-color: #f8d7da;
     color: #721c24;
-    border: 1px solid #721c24;
 }
 
 /* ===== EXPANDER ===== */
@@ -401,12 +399,11 @@ header, [data-testid="stHeader"] {
     background-color: var(--input-bg) !important;
     color: var(--text-color) !important;
     border-radius: 8px !important;
-    border: 1px solid var(--border-color) !important;
+    border: none !important;
 }
 
 .streamlit-expanderHeader:hover {
     background-color: var(--item-hover) !important;
-    border-color: var(--accent-color) !important;
 }
 
 .streamlit-expanderHeader p, .streamlit-expanderHeader span {
@@ -415,8 +412,7 @@ header, [data-testid="stHeader"] {
 
 .streamlit-expanderContent {
     background-color: var(--secondary-bg) !important;
-    border: 1px solid var(--border-color) !important;
-    border-top: none !important;
+    border: none !important;
 }
 
 .streamlit-expanderContent p, .streamlit-expanderContent span,
@@ -427,7 +423,7 @@ header, [data-testid="stHeader"] {
 /* New Streamlit expander selectors */
 [data-testid="stExpander"] {
     background-color: var(--secondary-bg) !important;
-    border: 1px solid var(--border-color) !important;
+    border: none !important;
     border-radius: 8px !important;
 }
 
@@ -498,7 +494,6 @@ hr {
     margin-top: 10px;
     background: var(--item-bg);
     border-radius: 8px;
-    border: 1px solid var(--border-color);
 }
 
 .dept-link a {
@@ -528,9 +523,10 @@ footer, footer * {
 [data-testid="stDownloadButton"] > button {
     background-color: var(--secondary-bg) !important;
     color: var(--text-color) !important;
-    border: 1px solid var(--border-color) !important;
-    border-radius: 8px !important;
-    transition: all 0.3s ease !important;
+    border: none !important;
+    border-radius: 20px !important;
+    transition: background 0.2s ease !important;
+    font-weight: 500 !important;
 }
 
 .stDownloadButton button span,
@@ -545,9 +541,6 @@ footer, footer * {
 .stDownloadButton button:hover,
 [data-testid="stDownloadButton"] button:hover {
     background-color: var(--item-hover) !important;
-    border-color: var(--accent-color) !important;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
 /* Ensure download buttons in expanders have correct styling */
@@ -555,7 +548,7 @@ footer, footer * {
 [data-testid="stExpander"] [data-testid="stDownloadButton"] button {
     background-color: var(--secondary-bg) !important;
     color: var(--text-color) !important;
-    border: 1px solid var(--border-color) !important;
+    border: none !important;
 }
 
 [data-testid="stExpander"] .stDownloadButton button span,
