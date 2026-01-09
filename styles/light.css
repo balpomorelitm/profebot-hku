@@ -568,3 +568,49 @@ footer, footer * {
         margin-right: 0;
     }
 }
+
+/* ===== INTERACTIVE QUIZ STYLING ===== */
+/* Quiz container */
+.stRadio > div {
+    background-color: var(--secondary-bg);
+    border-radius: 12px;
+    padding: 8px 12px;
+    margin: 4px 0;
+}
+
+/* Radio button options */
+.stRadio > div > label {
+    background-color: var(--item-bg) !important;
+    border-radius: 8px !important;
+    padding: 10px 16px !important;
+    margin: 4px 0 !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    display: block !important;
+    border: 2px solid transparent !important;
+}
+
+.stRadio > div > label:hover {
+    background-color: var(--item-hover) !important;
+    border-color: var(--accent-color) !important;
+    transform: translateX(4px);
+}
+
+/* Selected radio option */
+.stRadio > div > label[data-checked="true"],
+.stRadio > div > label:has(input:checked) {
+    background-color: rgba(14, 66, 54, 0.15) !important;
+    border-color: var(--accent-color) !important;
+}
+
+/* Quiz question text */
+.stMarkdown strong {
+    color: var(--text-color);
+}
+
+/* Submit button styling for quiz */
+button[kind="primary"] {
+    background: var(--accent-gradient) !important;
+    border: none !important;
+    font-weight: 600 !important;
+}
