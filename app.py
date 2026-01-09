@@ -11,6 +11,14 @@ from typing import Optional, List, Dict
 from PIL import Image
 from pathlib import Path
 from collections import Counter
+from io import BytesIO
+try:
+    from docx import Document
+    from docx.shared import Pt, RGBColor
+    from docx.enum.text import WD_ALIGN_PARAGRAPH
+    DOCX_AVAILABLE = True
+except ImportError:
+    DOCX_AVAILABLE = False
 
 # ==========================================
 # LOGGING CONFIGURATION
@@ -441,12 +449,10 @@ When students ask about external tools, apps, games, or resources to practice Sp
    - Course objectives and learning outcomes
    - Exam information
    - Assignment deadlines and submission guidelines
-   
+
 [DYNAMIC FOLLOW-UP SYSTEM]
 At the very end of your response, you MUST generate exactly 3 suggested follow-up questions for the student.
-
 ⚠️ **CRITICAL - FOLLOW-UP LANGUAGE**: These 3 suggestions MUST be written in the STUDENT'S PREFERRED LANGUAGE, **NEVER in Spanish** (unless Spanish IS their preferred language).
-
 - These questions must be relevant to what you just explained and intersect with the course topics.
 - Format them EXACTLY like this (starting with ///):
   /// Tell me more about [Related Topic]
@@ -678,6 +684,69 @@ def export_conversation_md(messages: list) -> str:
     lines.append(f"*Exported from ProfeBot - SPAN1001 Tutor | {len(messages)} messages*")
     
     return "\n".join(lines)
+
+def export_conversation_docx(messages: list) -> BytesIO:
+    """Export conversation to Word (DOCX) format."""
+    if not DOCX_AVAILABLE:
+        return None
+    
+    current_thread = get_current_thread()
+    doc = Document()
+    
+    # Title
+    title = doc.add_heading('ProfeBot Conversation', 0)
+    title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    
+    # Metadata
+    doc.add_paragraph(f"Title: {current_thread['title']}")
+    doc.add_paragraph(f"Date: {current_thread['created_at'].strftime('%Y-%m-%d %H:%M')}")
+    doc.add_paragraph(f"Language: {st.session_state.preferred_language}")
+    doc.add_paragraph(f"Total messages: {len(messages)}")
+    doc.add_paragraph('')  # Empty line
+    
+    # Add messages
+    for msg in messages:
+        # Clean out suggestion markers
+        content = re.sub(r'///.*', '', msg["content"]).strip()
+        
+        if msg["role"] == "user":
+            # User message header - HKU Blue
+            p = doc.add_paragraph()
+            run = p.add_run('🧑 Student')
+            run.bold = True
+            run.font.size = Pt(12)
+            run.font.color.rgb = RGBColor(0, 119, 200)  # HKU Blue #0077C8
+            
+            # User message content
+            p_content = doc.add_paragraph(content)
+            p_content.paragraph_format.left_indent = Pt(20)
+        else:
+            # Assistant message header - HKU Green
+            p = doc.add_paragraph()
+            run = p.add_run('🤖 ProfeBot')
+            run.bold = True
+            run.font.size = Pt(12)
+            run.font.color.rgb = RGBColor(14, 66, 54)  # HKU Green #0e4236
+            
+            # Assistant message content
+            p_content = doc.add_paragraph(content)
+            p_content.paragraph_format.left_indent = Pt(20)
+        
+        doc.add_paragraph('')  # Empty line between messages
+    
+    # Footer
+    doc.add_paragraph('_' * 50)
+    footer = doc.add_paragraph('Exported from ProfeBot - SPAN1001 Tutor')
+    footer.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    footer_run = footer.runs[0]
+    footer_run.italic = True
+    footer_run.font.size = Pt(10)
+    
+    # Save to BytesIO
+    buffer = BytesIO()
+    doc.save(buffer)
+    buffer.seek(0)
+    return buffer
 
 # ==========================================
 # ANALYTICS FUNCTIONS
@@ -1086,6 +1155,20 @@ with st.sidebar:
             mime="text/markdown",
             use_container_width=True
         )
+        
+        # Export as Word (DOCX)
+        if DOCX_AVAILABLE:
+            docx_buffer = export_conversation_docx(current_thread["messages"])
+            if docx_buffer:
+                st.download_button(
+                    label="📘 Download Word",
+                    data=docx_buffer,
+                    file_name=f"profebot_chat_{datetime.now().strftime('%Y%m%d_%H%M')}.docx",
+                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    use_container_width=True
+                )
+        else:
+            st.caption("⚠️ Install python-docx to enable Word export")
     
     # Analytics / Usage Stats
     with st.expander("📊 Usage Stats", expanded=False):
@@ -1153,15 +1236,15 @@ if user_messages:
 
 history_content = "".join(history_items_html) if history_items_html else '<div class="empty-history">No messages yet.<br>Start chatting!</div>'
 
-# Get dark mode state for styling
+# Get dark mode state for styling - HKU Colors
 is_dark = st.session_state.get('dark_mode', False)
 panel_bg = "rgba(22, 27, 34, 0.92)" if is_dark else "rgba(255, 255, 255, 0.92)"
 history_text_color = "#f0f6fc" if is_dark else "#24292f"
 history_text_secondary = "#8b949e" if is_dark else "#57606a"
-history_border_color = "#30363d" if is_dark else "#d0d7de"
+history_border_color = "rgba(0, 168, 107, 0.3)" if is_dark else "rgba(14, 66, 54, 0.3)"
 history_item_bg = "rgba(33, 38, 45, 0.9)" if is_dark else "rgba(246, 248, 250, 0.9)"
-history_item_hover = "rgba(48, 54, 61, 0.95)" if is_dark else "rgba(234, 238, 242, 0.95)"
-history_accent_color = "#58a6ff" if is_dark else "#2da44e"
+history_item_hover = "rgba(0, 168, 107, 0.15)" if is_dark else "rgba(14, 66, 54, 0.1)"
+history_accent_color = "#00A86B" if is_dark else "#0e4236"
 
 # HTML for the panel (will be rendered with st.markdown)
 history_panel_html = f'''
