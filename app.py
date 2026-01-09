@@ -201,6 +201,38 @@ def get_language_instruction(language: str, custom_language: str = "") -> str:
     else:
         return "All grammatical explanations, feedback, and answers to administrative questions MUST be in ENGLISH."
 
+def get_current_semester_info() -> dict:
+    """Determine current semester based on month and return relevant unit information."""
+    current_month = datetime.now().month
+    
+    if 1 <= current_month <= 5:  # January to May = Semester 2
+        return {
+            "semester": 2,
+            "semester_name": "Second Semester (Spring)",
+            "primary_units": "Units 7-12",
+            "secondary_units": "Units 1-4 (next level book)",
+            "focus_description": "The student is in the SECOND SEMESTER. Prioritize content from Units 7 onwards. Units 0-6 were covered last semester and can be referenced for review, but new content should focus on Units 7+.",
+            "months": "January - May"
+        }
+    elif 9 <= current_month <= 12:  # September to December = Semester 1
+        return {
+            "semester": 1,
+            "semester_name": "First Semester (Fall)",
+            "primary_units": "Units 0-6",
+            "secondary_units": "None (first semester)",
+            "focus_description": "The student is in the FIRST SEMESTER. Focus primarily on Units 0-6. Do not introduce content from Units 7+ as they haven't covered that material yet.",
+            "months": "September - December"
+        }
+    else:  # June to August = Summer break / transition period
+        return {
+            "semester": 0,
+            "semester_name": "Summer Period",
+            "primary_units": "All units for review",
+            "secondary_units": "Preparation for next semester",
+            "focus_description": "This is the SUMMER PERIOD between semesters. The student may be reviewing material or preparing for the next academic year. Cover all units as needed based on the student's questions.",
+            "months": "June - August"
+        }
+
 # ==========================================
 # NOTION CONNECTION WITH CACHING
 # ==========================================
@@ -308,6 +340,7 @@ def get_ai_response(user_message: str, notion_context: str, language: str, custo
     """
     
     language_instruction = get_language_instruction(language, custom_language)
+    semester_info = get_current_semester_info()
     
     system_prompt = f"""
 [ROLE AND PROFILE]
@@ -373,6 +406,19 @@ When a student asks a question, follow this process:
 3. **THEN**: Look into the [VOCABULARY] and [GRAMMAR] sections of the identified unit(s) to provide accurate, curriculum-aligned answers.
 4. **EXAMPLE**: If a student asks about "numbers" or "age", check which unit has tags related to numbers/age, then use ONLY the vocabulary and grammar from that unit.
 5. **MULTIPLE UNITS**: If the topic spans multiple units, combine information from all relevant units but clearly indicate which content comes from which unit.
+
+[📅 SEMESTER-AWARE CONTENT PRIORITIZATION]
+**Current Academic Period:** {semester_info['semester_name']} ({semester_info['months']})
+**Primary Focus Units:** {semester_info['primary_units']}
+**Secondary/Advanced Units:** {semester_info['secondary_units']}
+
+**IMPORTANT CONTEXT:** {semester_info['focus_description']}
+
+**How to apply this:**
+- When answering questions, PRIORITIZE content from the primary focus units for this semester.
+- If a student asks about content from units they haven't covered yet (based on the semester), gently explain that this topic will be covered later in the course, but you can give them a brief preview if they're curious.
+- For review questions about past semesters' content, feel free to help but remind them that this was previous material.
+- Always check which units are currently "Active" in the database - these represent what the teacher has enabled for the current period.
 
 [TASK GENERATION SYSTEM]
 When the user requests a TASK (CMD_TASKS), follow this protocol:
