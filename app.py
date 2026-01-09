@@ -6,6 +6,7 @@ import time
 import json
 import os
 import logging
+import hashlib
 from datetime import datetime, timedelta
 from typing import Optional, List, Dict
 from PIL import Image
@@ -38,6 +39,12 @@ STYLES_DIR = BASE_DIR / "styles"
 DATA_DIR = BASE_DIR / "data"
 THREADS_FILE = DATA_DIR / "threads.json"
 ANALYTICS_FILE = DATA_DIR / "analytics.json"
+USER_PROFILE_FILE = DATA_DIR / "user_profile.json"
+RESPONSE_CACHE_FILE = DATA_DIR / "response_cache.json"
+
+# Cache configuration
+CACHE_MAX_SIZE = 100
+CACHE_TTL_HOURS = 168  # 1 week
 
 # Ensure data directory exists
 DATA_DIR.mkdir(exist_ok=True)
@@ -256,6 +263,283 @@ def get_current_semester_info() -> dict:
             "focus_description": "This is the SUMMER PERIOD between semesters. The student may be reviewing material or preparing for the next academic year. Cover all units as needed based on the student's questions.",
             "months": "June - August"
         }
+
+# ==========================================
+# USER PROFILE & MEMORY SYSTEM
+# ==========================================
+def load_user_profile() -> Dict:
+    """Load user learning profile for personalization."""
+    try:
+        if USER_PROFILE_FILE.exists():
+            with open(USER_PROFILE_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+    except Exception as e:
+        logger.error(f"Error loading user profile: {e}")
+    return {
+        "name": None,
+        "weak_areas": [],
+        "strong_areas": [],
+        "vocabulary_errors": {},
+        "grammar_errors": {},
+        "completed_units": [],
+        "quiz_scores": [],
+        "learning_streak": 0,
+        "last_active": None,
+        "total_interactions": 0,
+        "favorite_topics": {},
+        "achievements": []
+    }
+
+def save_user_profile(profile: Dict):
+    """Save user learning profile."""
+    try:
+        profile["last_active"] = datetime.now().isoformat()
+        with open(USER_PROFILE_FILE, "w", encoding="utf-8") as f:
+            json.dump(profile, f, ensure_ascii=False, indent=2)
+        logger.info("User profile saved")
+    except Exception as e:
+        logger.error(f"Error saving user profile: {e}")
+
+def update_learning_streak(profile: Dict) -> Dict:
+    """Update the user's learning streak based on activity."""
+    today = datetime.now().date()
+    last_active = profile.get("last_active")
+    
+    if last_active:
+        try:
+            last_date = datetime.fromisoformat(last_active).date()
+            days_diff = (today - last_date).days
+            
+            if days_diff == 0:
+                pass  # Same day, streak unchanged
+            elif days_diff == 1:
+                profile["learning_streak"] = profile.get("learning_streak", 0) + 1
+            else:
+                profile["learning_streak"] = 1  # Reset streak
+        except:
+            profile["learning_streak"] = 1
+    else:
+        profile["learning_streak"] = 1
+    
+    return profile
+
+def track_user_interaction(user_message: str, ai_response: str):
+    """Analyze interaction to track learning patterns and update profile."""
+    profile = load_user_profile()
+    
+    # Update streak
+    profile = update_learning_streak(profile)
+    
+    # Increment total interactions
+    profile["total_interactions"] = profile.get("total_interactions", 0) + 1
+    
+    # Detect correction patterns in AI response (indicates areas to improve)
+    correction_indicators = [
+        (r"(?:actually|correction|careful|remember|note that|be careful)", "general"),
+        (r"(?:común error|common mistake|incorrecto|incorrect)", "general"),
+        (r"(?:ser|estar)", "ser_estar"),
+        (r"(?:género|gender|masculin|feminin)", "gender"),
+        (r"(?:conjugat|conjugación)", "conjugation"),
+        (r"(?:artículo|article|el |la |los |las )", "articles"),
+        (r"(?:preposición|preposition|por|para)", "prepositions"),
+        (r"(?:accent|acento|tilde)", "accents"),
+    ]
+    
+    response_lower = ai_response.lower()
+    message_lower = user_message.lower()
+    
+    # Check for corrections/errors
+    has_correction = any(re.search(r"(?:actually|correction|careful|incorrecto|mistake)", response_lower))
+    
+    if has_correction:
+        for pattern, topic in correction_indicators:
+            if re.search(pattern, response_lower) or re.search(pattern, message_lower):
+                if topic != "general":
+                    profile["grammar_errors"][topic] = profile["grammar_errors"].get(topic, 0) + 1
+    
+    # Track favorite topics based on questions
+    topic_keywords = {
+        "vocabulary": ["vocabulario", "vocabulary", "word", "palabra", "meaning", "significa"],
+        "grammar": ["gramática", "grammar", "rule", "regla"],
+        "conjugation": ["conjugat", "verb", "verbo"],
+        "pronunciation": ["pronuncia", "sound", "accent", "sonido"],
+        "culture": ["cultura", "culture", "spain", "españa", "mexico", "país"],
+        "exercises": ["ejercicio", "exercise", "practice", "quiz", "task", "práctica"]
+    }
+    
+    for topic, keywords in topic_keywords.items():
+        if any(kw in message_lower for kw in keywords):
+            profile["favorite_topics"][topic] = profile["favorite_topics"].get(topic, 0) + 1
+    
+    # Track quiz scores if detected
+    score_patterns = [
+        r"(\d+)\s*/\s*(\d+)",
+        r"(\d+)\s*(?:out of|de)\s*(\d+)",
+        r"(?:score|puntuación):\s*(\d+)\s*/\s*(\d+)",
+    ]
+    
+    for pattern in score_patterns:
+        match = re.search(pattern, response_lower)
+        if match:
+            try:
+                correct = int(match.group(1))
+                total = int(match.group(2))
+                if total > 0 and correct <= total:
+                    profile["quiz_scores"].append({
+                        "correct": correct,
+                        "total": total,
+                        "percentage": round(correct / total * 100, 1),
+                        "date": datetime.now().isoformat()
+                    })
+                    profile["quiz_scores"] = profile["quiz_scores"][-50:]  # Keep last 50
+                    break
+            except:
+                pass
+    
+    save_user_profile(profile)
+    return profile
+
+def get_user_context_for_prompt() -> str:
+    """Generate a context string about the user for the AI prompt."""
+    profile = load_user_profile()
+    
+    context_parts = []
+    
+    # Learning streak
+    streak = profile.get("learning_streak", 0)
+    if streak > 0:
+        context_parts.append(f"The student has a {streak}-day learning streak.")
+    
+    # Weak areas
+    grammar_errors = profile.get("grammar_errors", {})
+    if grammar_errors:
+        sorted_errors = sorted(grammar_errors.items(), key=lambda x: x[1], reverse=True)[:3]
+        weak_topics = [topic for topic, _ in sorted_errors]
+        if weak_topics:
+            context_parts.append(f"Areas needing extra attention: {', '.join(weak_topics)}.")
+    
+    # Quiz performance
+    quiz_scores = profile.get("quiz_scores", [])
+    if quiz_scores:
+        recent_scores = quiz_scores[-5:]
+        avg_score = sum(s["percentage"] for s in recent_scores) / len(recent_scores)
+        if avg_score < 60:
+            context_parts.append(f"Recent quiz average: {avg_score:.0f}% - student may need more practice.")
+        elif avg_score >= 90:
+            context_parts.append(f"Recent quiz average: {avg_score:.0f}% - student is performing excellently!")
+    
+    # Favorite topics
+    fav_topics = profile.get("favorite_topics", {})
+    if fav_topics:
+        top_topic = max(fav_topics.items(), key=lambda x: x[1])[0]
+        context_parts.append(f"Student shows high interest in: {top_topic}.")
+    
+    if context_parts:
+        return "\n[USER LEARNING PROFILE]\n" + "\n".join(context_parts)
+    return ""
+
+# ==========================================
+# RESPONSE CACHE SYSTEM
+# ==========================================
+def generate_cache_key(question: str, language: str) -> str:
+    """Generate a hash key for caching purposes."""
+    # Normalize the question
+    normalized = question.lower().strip()
+    normalized = re.sub(r'\s+', ' ', normalized)
+    normalized = re.sub(r'[?!.,;:]', '', normalized)
+    # Remove CMD_ prefixes for better matching
+    normalized = re.sub(r'cmd_\w+:\s*', '', normalized)
+    cache_key = f"{normalized}|{language}"
+    return hashlib.md5(cache_key.encode()).hexdigest()
+
+def get_cached_response(question: str, language: str) -> Optional[str]:
+    """Get cached response if available and not expired."""
+    try:
+        if not RESPONSE_CACHE_FILE.exists():
+            return None
+        
+        question_hash = generate_cache_key(question, language)
+        
+        with open(RESPONSE_CACHE_FILE, "r", encoding="utf-8") as f:
+            cache = json.load(f)
+        
+        if question_hash in cache:
+            entry = cache[question_hash]
+            cached_time = datetime.fromisoformat(entry["timestamp"])
+            
+            if datetime.now() - cached_time < timedelta(hours=CACHE_TTL_HOURS):
+                logger.info(f"Cache HIT for question: {question[:50]}...")
+                return entry["response"]
+            else:
+                logger.info(f"Cache EXPIRED for question: {question[:50]}...")
+    except Exception as e:
+        logger.error(f"Cache read error: {e}")
+    
+    return None
+
+def cache_response(question: str, language: str, response: str):
+    """Cache a response for future use."""
+    # Don't cache error responses or very short responses
+    if "❌" in response or len(response) < 100:
+        return
+    
+    # Don't cache dynamic content (quizzes with random elements, etc.)
+    dynamic_indicators = ["CMD_QUIZ", "CMD_TASKS", "CMD_ROLEPLAY"]
+    if any(indicator in question.upper() for indicator in dynamic_indicators):
+        return
+    
+    try:
+        cache = {}
+        if RESPONSE_CACHE_FILE.exists():
+            with open(RESPONSE_CACHE_FILE, "r", encoding="utf-8") as f:
+                cache = json.load(f)
+        
+        question_hash = generate_cache_key(question, language)
+        
+        cache[question_hash] = {
+            "question_preview": question[:200],
+            "response": response,
+            "language": language,
+            "timestamp": datetime.now().isoformat(),
+            "hit_count": cache.get(question_hash, {}).get("hit_count", 0) + 1
+        }
+        
+        # Prune old entries if cache is too large
+        if len(cache) > CACHE_MAX_SIZE:
+            # Sort by timestamp and keep most recent
+            sorted_entries = sorted(
+                cache.items(), 
+                key=lambda x: x[1].get("timestamp", ""),
+                reverse=True
+            )
+            cache = dict(sorted_entries[:CACHE_MAX_SIZE])
+        
+        with open(RESPONSE_CACHE_FILE, "w", encoding="utf-8") as f:
+            json.dump(cache, f, ensure_ascii=False, indent=2)
+        
+        logger.info(f"Cached response for: {question[:50]}...")
+            
+    except Exception as e:
+        logger.error(f"Cache write error: {e}")
+
+def get_cache_stats() -> Dict:
+    """Get cache statistics for display."""
+    try:
+        if RESPONSE_CACHE_FILE.exists():
+            with open(RESPONSE_CACHE_FILE, "r", encoding="utf-8") as f:
+                cache = json.load(f)
+            
+            total_entries = len(cache)
+            total_hits = sum(entry.get("hit_count", 0) for entry in cache.values())
+            
+            return {
+                "entries": total_entries,
+                "total_hits": total_hits,
+                "max_size": CACHE_MAX_SIZE
+            }
+    except:
+        pass
+    return {"entries": 0, "total_hits": 0, "max_size": CACHE_MAX_SIZE}
 
 # ==========================================
 # NOTION CONNECTION WITH CACHING
@@ -486,8 +770,17 @@ def get_ai_response(user_message: str, notion_context: str, language: str, custo
         conversation_history: List of previous messages in the conversation
     """
     
+    # Check cache first for simple, non-contextual queries
+    is_contextual = conversation_history and len(conversation_history) > 2
+    if not is_contextual:
+        cached = get_cached_response(user_message, language)
+        if cached:
+            # Add cache indicator for router info
+            return f"{cached}\n<!--ROUTER_DEBUG:CACHED|Cache-->"
+    
     language_instruction = get_language_instruction(language, custom_language)
     semester_info = get_current_semester_info()
+    user_context = get_user_context_for_prompt()
     
     system_prompt = f"""
 [ROLE AND PROFILE]
@@ -566,6 +859,7 @@ When a student asks a question, follow this process:
 - If a student asks about content from units they haven't covered yet (based on the semester), gently explain that this topic will be covered later in the course, but you can give them a brief preview if they're curious.
 - For review questions about past semesters' content, feel free to help but remind them that this was previous material.
 - Always check which units are currently "Active" in the database - these represent what the teacher has enabled for the current period.
+{user_context}
 
 [TASK GENERATION SYSTEM]
 When the user requests a TASK (CMD_TASKS), follow this protocol:
@@ -713,6 +1007,10 @@ At the very end of your response, you MUST generate exactly 3 suggested follow-u
     if result is None:
         return "❌ Failed to connect to AI service. Please try again later."
     
+    # Cache the response for future use (only for non-contextual queries)
+    if not is_contextual:
+        cache_response(user_message, language, result)
+    
     # Inject router debug info (hidden in HTML comment for optional display)
     router_info = f"<!--ROUTER_DEBUG:{complexity}|{model_used}-->"
     return f"{result}\n{router_info}"
@@ -757,6 +1055,16 @@ def initialize_session_state():
     
     if "dark_mode" not in st.session_state:
         st.session_state.dark_mode = False
+    
+    # Interactive quiz state
+    if "active_quiz" not in st.session_state:
+        st.session_state.active_quiz = None  # Stores parsed quiz data
+    if "quiz_answers" not in st.session_state:
+        st.session_state.quiz_answers = {}  # Stores user's selected answers
+    if "quiz_submitted" not in st.session_state:
+        st.session_state.quiz_submitted = False
+    if "quiz_results" not in st.session_state:
+        st.session_state.quiz_results = None
 
 # ==========================================
 # PERSISTENCE FUNCTIONS
@@ -1218,6 +1526,9 @@ def process_user_input(user_text: str, quick_action: str = None):
     # Track analytics
     track_message(user_text, response_time)
     
+    # Track user learning patterns
+    track_user_interaction(user_text, clean_response)
+    
     # Save threads after each interaction
     save_threads_to_file()
 
@@ -1404,6 +1715,67 @@ with st.sidebar:
             st.markdown("**⚡ Popular Actions**")
             for action, count in analytics["popular_actions"][:3]:
                 st.caption(f"• {action}: {count}")
+        
+        # Cache stats
+        cache_stats = get_cache_stats()
+        st.divider()
+        st.markdown("**💾 Response Cache**")
+        st.caption(f"Cached: {cache_stats['entries']}/{cache_stats['max_size']}")
+        st.caption(f"Total hits: {cache_stats['total_hits']}")
+    
+    # My Learning Progress
+    with st.expander("📈 My Progress", expanded=False):
+        profile = load_user_profile()
+        
+        # Learning streak
+        streak = profile.get("learning_streak", 0)
+        if streak > 0:
+            if streak >= 7:
+                st.markdown(f"### 🔥 {streak} day streak! Amazing!")
+            else:
+                st.markdown(f"### 🔥 {streak} day streak!")
+        else:
+            st.markdown("### Start your streak today! 🚀")
+        
+        # Total interactions
+        total = profile.get("total_interactions", 0)
+        st.caption(f"Total questions asked: {total}")
+        
+        # Quiz performance
+        scores = profile.get("quiz_scores", [])
+        if scores:
+            recent_scores = scores[-10:]
+            avg_score = sum(s["percentage"] for s in recent_scores) / len(recent_scores)
+            st.markdown("**📝 Quiz Performance**")
+            st.progress(avg_score / 100)
+            st.caption(f"Average: {avg_score:.0f}% ({len(scores)} quizzes)")
+            
+            # Best score
+            best = max(scores, key=lambda x: x["percentage"])
+            st.caption(f"Best score: {best['percentage']:.0f}%")
+        
+        # Weak areas to review
+        grammar_errors = profile.get("grammar_errors", {})
+        if grammar_errors:
+            st.markdown("**📚 Areas to Review**")
+            sorted_errors = sorted(grammar_errors.items(), key=lambda x: x[1], reverse=True)[:3]
+            for area, count in sorted_errors:
+                area_display = area.replace("_", "/").title()
+                st.caption(f"• {area_display} ({count} corrections)")
+        
+        # Favorite topics
+        fav_topics = profile.get("favorite_topics", {})
+        if fav_topics:
+            st.markdown("**💡 Your Interests**")
+            sorted_topics = sorted(fav_topics.items(), key=lambda x: x[1], reverse=True)[:3]
+            for topic, count in sorted_topics:
+                st.caption(f"• {topic.title()}: {count} questions")
+        
+        # Encouragement message
+        if scores and avg_score >= 80:
+            st.success("🌟 ¡Excelente! You're doing great!")
+        elif streak >= 3:
+            st.info("💪 Keep up the momentum!")
     
     # About
     with st.expander("ℹ️ About"):
@@ -1526,6 +1898,189 @@ history_panel_html = f'''
 '''
 
 # ==========================================
+# INTERACTIVE QUIZ SYSTEM
+# ==========================================
+def parse_quiz_from_response(response: str) -> Optional[Dict]:
+    """Parse a quiz from AI response into structured format.
+    
+    Detects multiple choice questions in formats:
+    1. Question text
+    A) Option A  OR  A. Option A  OR  a) Option a
+    B) Option B
+    C) Option C
+    D) Option D
+    """
+    # Check if this looks like a quiz
+    has_questions = re.search(r'\d+\.?\s*[^\n]+\?', response)
+    has_options = re.search(r'[A-Da-d][\)\.]\s*[^\n]+', response)
+    
+    if not (has_questions and has_options):
+        return None
+    
+    # Parse questions
+    questions = []
+    
+    # Normalize the response - convert all option formats to consistent A) format
+    normalized = response
+    normalized = re.sub(r'([A-Da-d])\.\s+', r'\1) ', normalized)  # A. -> A)
+    normalized = re.sub(r'([a-d])\)', lambda m: m.group(1).upper() + ')', normalized)  # a) -> A)
+    
+    # Pattern to match questions with their options
+    # Supports 3 or 4 options
+    question_pattern = r'(\d+)\.?\s*([^\n]+\?)\s*\n\s*A\)\s*([^\n]+)\s*\n\s*B\)\s*([^\n]+)\s*\n\s*C\)\s*([^\n]+)(?:\s*\n\s*D\)\s*([^\n]+))?'
+    
+    matches = re.findall(question_pattern, normalized, re.MULTILINE | re.IGNORECASE)
+    
+    for match in matches:
+        q_num = match[0]
+        q_text = match[1].strip()
+        options = {
+            'A': match[2].strip(),
+            'B': match[3].strip(),
+            'C': match[4].strip(),
+        }
+        if match[5]:  # D option is optional
+            options['D'] = match[5].strip()
+        
+        questions.append({
+            'number': int(q_num),
+            'question': q_text,
+            'options': options
+        })
+    
+    if not questions:
+        return None
+    
+    # Extract any intro text before the questions
+    first_q_match = re.search(r'1\.?\s*', response)
+    intro_text = response[:first_q_match.start()].strip() if first_q_match else ""
+    
+    return {
+        'intro': intro_text,
+        'questions': questions,
+        'total': len(questions)
+    }
+
+
+def render_interactive_quiz(quiz_data: Dict, quiz_id: str):
+    """Render an interactive quiz with clickable options."""
+    
+    # Display intro if exists
+    if quiz_data.get('intro'):
+        st.markdown(quiz_data['intro'])
+    
+    st.markdown("---")
+    st.markdown(f"### 📝 Quiz ({quiz_data['total']} questions)")
+    
+    # Initialize answers dict if not exists
+    if 'quiz_answers' not in st.session_state:
+        st.session_state.quiz_answers = {}
+    
+    # Render each question
+    for q in quiz_data['questions']:
+        q_key = f"{quiz_id}_q{q['number']}"
+        
+        st.markdown(f"**{q['number']}. {q['question']}**")
+        
+        # Get options as list for radio
+        option_labels = [f"{letter}) {text}" for letter, text in q['options'].items()]
+        option_keys = list(q['options'].keys())
+        
+        # Get current selection
+        current_selection = st.session_state.quiz_answers.get(q_key)
+        current_index = option_keys.index(current_selection) if current_selection in option_keys else None
+        
+        # Radio buttons for options
+        selected = st.radio(
+            f"Select answer for question {q['number']}",
+            options=option_keys,
+            format_func=lambda x, opts=q['options']: f"{x}) {opts[x]}",
+            key=q_key,
+            index=current_index,
+            label_visibility="collapsed"
+        )
+        
+        # Store the answer
+        if selected:
+            st.session_state.quiz_answers[q_key] = selected
+        
+        st.markdown("")  # Spacing
+    
+    st.markdown("---")
+    
+    # Count answered questions
+    answered = sum(1 for q in quiz_data['questions'] 
+                   if f"{quiz_id}_q{q['number']}" in st.session_state.quiz_answers 
+                   and st.session_state.quiz_answers[f"{quiz_id}_q{q['number']}"])
+    
+    st.caption(f"✅ Answered: {answered}/{quiz_data['total']}")
+    
+    # Submit button
+    col1, col2 = st.columns([1, 3])
+    with col1:
+        if st.button("📤 Submit Answers", type="primary", use_container_width=True, key=f"submit_{quiz_id}"):
+            if answered < quiz_data['total']:
+                st.warning(f"⚠️ You've only answered {answered}/{quiz_data['total']} questions. Are you sure?")
+            
+            # Format answers for AI feedback
+            answers_text = format_quiz_answers_for_submission(quiz_data, quiz_id)
+            st.session_state.quiz_submitted = True
+            st.session_state.pending_quiz_submission = answers_text
+            st.rerun()
+    
+    with col2:
+        if st.button("🔄 Clear Answers", use_container_width=True, key=f"clear_{quiz_id}"):
+            # Clear answers for this quiz
+            for q in quiz_data['questions']:
+                q_key = f"{quiz_id}_q{q['number']}"
+                if q_key in st.session_state.quiz_answers:
+                    del st.session_state.quiz_answers[q_key]
+            st.rerun()
+
+
+def format_quiz_answers_for_submission(quiz_data: Dict, quiz_id: str) -> str:
+    """Format the user's quiz answers for submission to the AI."""
+    answers = []
+    
+    for q in quiz_data['questions']:
+        q_key = f"{quiz_id}_q{q['number']}"
+        answer = st.session_state.quiz_answers.get(q_key, "Not answered")
+        
+        # Include the question and selected answer
+        if answer != "Not answered":
+            answers.append(f"{q['number']}. {answer}")
+        else:
+            answers.append(f"{q['number']}. (Not answered)")
+    
+    submission = "Here are my answers to the quiz:\n\n"
+    submission += "\n".join(answers)
+    submission += "\n\nPlease check my answers and give me detailed feedback on each one. Tell me which ones are correct and explain any mistakes."
+    
+    return submission
+
+
+def check_for_quiz_in_last_response() -> Optional[Dict]:
+    """Check if the last AI response contains a quiz."""
+    current_thread = get_current_thread()
+    messages = current_thread.get("messages", [])
+    
+    if len(messages) < 2:
+        return None
+    
+    # Get last assistant message
+    last_assistant_msg = None
+    for msg in reversed(messages):
+        if msg["role"] == "assistant":
+            last_assistant_msg = msg["content"]
+            break
+    
+    if not last_assistant_msg:
+        return None
+    
+    # Try to parse quiz
+    return parse_quiz_from_response(last_assistant_msg)
+
+# ==========================================
 # MAIN CHAT INTERFACE
 # ==========================================
 # Get current thread
@@ -1541,7 +2096,37 @@ for idx, message in enumerate(current_thread["messages"]):
     
     with st.chat_message(tipo):
         clean_text = re.sub(r'///.*', '', message["content"]).strip()
-        st.markdown(clean_text)
+        
+        # Check if this is the last assistant message and contains a quiz
+        is_last_assistant = (tipo == "assistant" and idx == len(current_thread["messages"]) - 1)
+        
+        if is_last_assistant and not st.session_state.get('quiz_submitted', False):
+            # Try to parse as quiz
+            quiz_data = parse_quiz_from_response(clean_text)
+            
+            if quiz_data and quiz_data['questions']:
+                # Store the quiz data
+                st.session_state.active_quiz = quiz_data
+                quiz_id = f"quiz_{st.session_state.current_thread_id}_{idx}"
+                
+                # Render interactive quiz
+                render_interactive_quiz(quiz_data, quiz_id)
+            else:
+                # Regular message
+                st.markdown(clean_text)
+        else:
+            # Regular message display
+            st.markdown(clean_text)
+
+# Handle pending quiz submission
+if st.session_state.get('pending_quiz_submission'):
+    submission_text = st.session_state.pending_quiz_submission
+    st.session_state.pending_quiz_submission = None
+    st.session_state.quiz_submitted = False
+    st.session_state.active_quiz = None
+    st.session_state.quiz_answers = {}
+    process_user_input(submission_text)
+    st.rerun()
 
 # Dynamic suggestion buttons
 if current_thread["suggestions"] and len(current_thread["messages"]) > 1:
@@ -1562,8 +2147,11 @@ if current_thread["suggestions"] and len(current_thread["messages"]) > 1:
 # Display router debug info (small caption)
 if hasattr(st.session_state, 'last_router_info') and st.session_state.last_router_info:
     router_info = st.session_state.last_router_info
-    model_emoji = "🚀" if "DeepSeek" in router_info["model"] else "🧠"
-    st.caption(f"{model_emoji} Router: {router_info['complexity']} → Using {router_info['model']}")
+    if router_info["complexity"] == "CACHED":
+        st.caption(f"⚡ Response from cache (instant)")
+    else:
+        model_emoji = "🚀" if "DeepSeek" in router_info["model"] else "🧠"
+        st.caption(f"{model_emoji} Router: {router_info['complexity']} → Using {router_info['model']}")
 
 # Quick action buttons
 st.divider()
