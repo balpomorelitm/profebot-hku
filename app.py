@@ -882,6 +882,27 @@ When the user requests a QUIZ (CMD_QUIZ):
 4. Wait for the student to submit their answers.
 5. Provide detailed feedback IN THE STUDENT'S PREFERRED LANGUAGE.
 
+**⚠️ MANDATORY QUIZ FORMAT** (for interactive quiz system):
+When generating multiple choice questions, you MUST use this EXACT format:
+
+1. Question text here?
+A) First option
+B) Second option
+C) Third option
+D) Fourth option (optional)
+
+2. Next question here?
+A) Option A
+B) Option B
+C) Option C
+
+Rules for quiz format:
+- Each question MUST start with a number followed by a period or parenthesis (e.g., "1." or "1)")
+- Each option MUST be on its own line
+- Options MUST use capital letters A, B, C, D followed by a closing parenthesis (e.g., "A)")
+- Leave a blank line between questions
+- Do NOT use bold/markdown in the question numbers or option letters
+
 [EXERCISE GENERATION LOGIC]
 ⚠️ LANGUAGE REMINDER: ALL exercise instructions and explanations MUST be in the STUDENT'S PREFERRED LANGUAGE.
 
@@ -1903,37 +1924,50 @@ history_panel_html = f'''
 def parse_quiz_from_response(response: str) -> Optional[Dict]:
     """Parse a quiz from AI response into structured format.
     
-    Detects multiple choice questions in formats:
-    1. Question text
-    A) Option A  OR  A. Option A  OR  a) Option a
-    B) Option B
-    C) Option C
-    D) Option D
+    Detects multiple choice questions in various formats:
+    - 1. Question text?  or  1) Question text  or  **1.** Question
+    - A) Option  or  A. Option  or  a) option  or  **A)** Option
     """
-    # Check if this looks like a quiz
-    has_questions = re.search(r'\d+\.?\s*[^\n]+\?', response)
-    has_options = re.search(r'[A-Da-d][\)\.]\s*[^\n]+', response)
+    # Check if this looks like a quiz - more flexible detection
+    # Look for numbered items AND lettered options
+    has_numbered = re.search(r'(?:^|\n)\s*\*?\*?(\d+)[\.\)]\*?\*?\s+', response)
+    has_options = re.search(r'(?:^|\n)\s*\*?\*?[A-Da-d][\)\.]', response)
     
-    if not (has_questions and has_options):
+    # Also check for quiz-related keywords
+    quiz_keywords = ['quiz', 'question', 'pregunta', 'choose', 'select', 'elige', 'selecciona', 'correct', 'answer', 'respuesta']
+    has_quiz_context = any(kw in response.lower() for kw in quiz_keywords)
+    
+    if not (has_numbered and has_options):
+        logger.debug("Quiz detection failed: no numbered questions with options found")
         return None
     
     # Parse questions
     questions = []
     
-    # Normalize the response - convert all option formats to consistent A) format
-    normalized = response
-    normalized = re.sub(r'([A-Da-d])\.\s+', r'\1) ', normalized)  # A. -> A)
-    normalized = re.sub(r'([a-d])\)', lambda m: m.group(1).upper() + ')', normalized)  # a) -> A)
+    # Clean markdown formatting
+    cleaned = response
+    cleaned = re.sub(r'\*\*', '', cleaned)  # Remove bold markers
+    cleaned = re.sub(r'\*', '', cleaned)    # Remove italic markers
     
-    # Pattern to match questions with their options
-    # Supports 3 or 4 options
-    question_pattern = r'(\d+)\.?\s*([^\n]+\?)\s*\n\s*A\)\s*([^\n]+)\s*\n\s*B\)\s*([^\n]+)\s*\n\s*C\)\s*([^\n]+)(?:\s*\n\s*D\)\s*([^\n]+))?'
+    # Normalize option formats to A)
+    cleaned = re.sub(r'([A-Da-d])\.\s+', r'\1) ', cleaned)  # A. -> A)
+    cleaned = re.sub(r'([a-d])\)', lambda m: m.group(1).upper() + ')', cleaned)  # a) -> A)
     
-    matches = re.findall(question_pattern, normalized, re.MULTILINE | re.IGNORECASE)
+    # More flexible pattern - question may or may not end with ?
+    # Pattern breakdown:
+    # (\d+)[\.\)]\s* - question number with . or )
+    # ([^\n]+?)  - question text (non-greedy)
+    # \s*\n\s*A\)\s*([^\n]+) - option A
+    # etc.
+    question_pattern = r'(\d+)[\.\)]\s*([^\n]+?)\s*\n\s*A\)\s*([^\n]+)\s*\n\s*B\)\s*([^\n]+)\s*\n\s*C\)\s*([^\n]+)(?:\s*\n\s*D\)\s*([^\n]+))?'
+    
+    matches = re.findall(question_pattern, cleaned, re.MULTILINE | re.IGNORECASE)
+    
+    logger.info(f"Quiz parser found {len(matches)} potential questions")
     
     for match in matches:
         q_num = match[0]
-        q_text = match[1].strip()
+        q_text = match[1].strip().rstrip('?').strip() + '?'  # Ensure ends with ?
         options = {
             'A': match[2].strip(),
             'B': match[3].strip(),
@@ -1949,10 +1983,13 @@ def parse_quiz_from_response(response: str) -> Optional[Dict]:
         })
     
     if not questions:
+        logger.debug("Quiz parser: regex found no matching questions")
         return None
     
+    logger.info(f"Quiz parser successfully extracted {len(questions)} questions")
+    
     # Extract any intro text before the questions
-    first_q_match = re.search(r'1\.?\s*', response)
+    first_q_match = re.search(r'(?:^|\n)\s*1[\.\)]\s*', cleaned)
     intro_text = response[:first_q_match.start()].strip() if first_q_match else ""
     
     return {
