@@ -2034,79 +2034,75 @@ except Exception as e:
     st.error(f"Sidebar error: {e}")
 
 # ==========================================
-# MOBILE SIDEBAR TOGGLE BUTTON (ALWAYS VISIBLE)
+# MOBILE MENU BUTTON (FLOATING)
 # ==========================================
-mobile_toggle_html = """
-<div id="mobileSidebarToggle" style="
+mobile_menu_button = """
+<div id="mobileMenuBtn" onclick="toggleMobileSidebar()" style="
     display: none;
     position: fixed;
-    left: 12px;
-    top: 12px;
-    z-index: 999999;
-    width: 54px;
-    height: 54px;
+    left: 16px;
+    bottom: 80px;
+    width: 60px;
+    height: 60px;
     background: linear-gradient(135deg, #00A86B 0%, #0077C8 100%);
-    border: 3px solid rgba(255,255,255,0.3);
+    border: 3px solid rgba(255,255,255,0.4);
     border-radius: 50%;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.4);
     cursor: pointer;
+    z-index: 99999;
     align-items: center;
     justify-content: center;
-    font-size: 28px;
+    font-size: 32px;
     color: white;
     transition: all 0.3s ease;
-    user-select: none;
 ">☰</div>
 
 <style>
     @media (max-width: 768px) {
-        #mobileSidebarToggle {
+        #mobileMenuBtn {
             display: flex !important;
         }
     }
     
-    #mobileSidebarToggle:hover {
-        transform: scale(1.1);
-        box-shadow: 0 6px 20px rgba(0,0,0,0.6);
-    }
-    
-    #mobileSidebarToggle:active {
+    #mobileMenuBtn:active {
         transform: scale(0.9);
     }
 </style>
 
 <script>
-    const toggleBtn = document.getElementById('mobileSidebarToggle');
+function toggleMobileSidebar() {
+    const sidebar = window.parent.document.querySelector('[data-testid="stSidebar"]');
+    const btn = document.getElementById('mobileMenuBtn');
     
-    toggleBtn.addEventListener('click', function() {
-        const sidebar = window.parent.document.querySelector('[data-testid="stSidebar"]');
-        if (sidebar) {
-            const isExpanded = sidebar.getAttribute('aria-expanded') === 'true';
-            const nativeButton = sidebar.querySelector('button[kind="header"]');
-            
-            if (nativeButton) {
-                nativeButton.click();
-            }
-            
-            setTimeout(() => {
-                const newState = sidebar.getAttribute('aria-expanded') === 'true';
-                toggleBtn.innerHTML = newState ? '✕' : '☰';
-            }, 150);
-        }
-    });
+    if (!sidebar) return;
     
-    // Initialize button state
-    setTimeout(() => {
-        const sidebar = window.parent.document.querySelector('[data-testid="stSidebar"]');
-        if (sidebar) {
-            const isExpanded = sidebar.getAttribute('aria-expanded') === 'true';
-            toggleBtn.innerHTML = isExpanded ? '✕' : '☰';
+    const isExpanded = sidebar.getAttribute('aria-expanded') === 'true';
+    
+    if (isExpanded) {
+        sidebar.setAttribute('aria-expanded', 'false');
+        if (btn) btn.innerHTML = '☰';
+    } else {
+        sidebar.setAttribute('aria-expanded', 'true');
+        if (btn) btn.innerHTML = '✕';
+    }
+}
+
+// Initialize button
+setTimeout(() => {
+    const sidebar = window.parent.document.querySelector('[data-testid="stSidebar"]');
+    const btn = document.getElementById('mobileMenuBtn');
+    if (sidebar && btn) {
+        const isExpanded = sidebar.getAttribute('aria-expanded');
+        if (!isExpanded) {
+            sidebar.setAttribute('aria-expanded', 'false');
         }
-    }, 300);
+        btn.innerHTML = isExpanded === 'true' ? '✕' : '☰';
+    }
+}, 500);
 </script>
 """
 
-st.markdown(mobile_toggle_html, unsafe_allow_html=True)
+st.markdown(mobile_menu_button, unsafe_allow_html=True)
 
 # ==========================================
 # FLOATING MESSAGE HISTORY PANEL
