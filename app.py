@@ -81,11 +81,15 @@ hide_streamlit_style = """
     .stDeployButton {display: none !important;}
     header .stActionButton {display: none !important;}
     
-    /* Hide Fork button - multiple selectors */
+    /* Hide Fork button - comprehensive selectors */
     .stAppHeader a {display: none !important;}
     header a {display: none !important;}
-    iframe {display: none !important;}
-    a[target="_blank"] {display: none !important;}
+    header iframe {display: none !important;}
+    iframe[src*="github"] {display: none !important;}
+    iframe[title] {display: none !important;}
+    a[target="_blank"] {visibility: hidden !important; display: none !important;}
+    button[data-testid*="fork"] {display: none !important;}
+    div[data-testid*="fork"] {display: none !important;}
     
     /* SIDEBAR STYLING - 15% narrower */
     [data-testid="stSidebar"] {

@@ -285,7 +285,7 @@ header, [data-testid="stHeader"] {
     background-color: var(--input-bg) !important;
     color: var(--text-color) !important;
     border: none !important;
-    border-radius: 20px !important;
+    border-radius: 4px !important;
 }
 
 /* Fix placeholder text color in dark mode */
@@ -317,14 +317,14 @@ header, [data-testid="stHeader"] {
 [data-testid="stChatInput"] > div {
     background-color: var(--input-bg) !important;
     border-color: var(--border-color) !important;
-    border-radius: 20px !important;
+    border-radius: 4px !important;
     overflow: hidden !important;
 }
 
 /* Remove any white gaps/spaces around rounded input */
 [data-testid="stChatInput"] > div > div {
     background-color: var(--input-bg) !important;
-    border-radius: 20px !important;
+    border-radius: 4px !important;
 }
 
 [data-testid="stChatInputContainer"] {
