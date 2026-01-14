@@ -2311,49 +2311,49 @@ def check_for_quiz_in_last_response() -> Optional[Dict]:
 # Mobile menu expander (CSS in hide_streamlit_style hides this on desktop)
 with st.expander("📱 Menu", expanded=False):
     st.markdown("#### 💬 Conversations")
-        for thread_id, thread_data in sorted(
-            st.session_state.threads.items(), 
-            key=lambda x: x[1]["created_at"], 
-            reverse=True
-        )[:5]:  # Show only 5 most recent on mobile
-            is_active = thread_id == st.session_state.current_thread_id
-            if st.button(
-                f"{'📌' if is_active else '💭'} {thread_data['title'][:25]}",
-                key=f"mobile_thread_{thread_id}",
-                use_container_width=True,
-                type="primary" if is_active else "secondary"
-            ):
-                if thread_id != st.session_state.current_thread_id:
-                    switch_thread(thread_id)
-                    st.rerun()
-        
-        st.divider()
-        
-        if st.button("➕ New Conversation", use_container_width=True, key="mobile_btn_new"):
-            create_new_thread()
-            st.rerun()
-        
-        st.divider()
-        st.markdown("**🌐 Language**")
-        selected_lang = st.selectbox(
-            "Language",
-            options=list(LANGUAGE_OPTIONS.keys()),
-            index=0,
-            key="mobile_lang_sel",
-            label_visibility="collapsed"
-        )
-        st.session_state.preferred_language = LANGUAGE_OPTIONS[selected_lang]
-        
-        st.divider()
-        mode_label = "☀️ Day Mode" if st.session_state.dark_mode else "🌙 Night Mode"
-        if st.button(mode_label, use_container_width=True, key="mobile_btn_dark"):
-            st.session_state.dark_mode = not st.session_state.dark_mode
-            save_threads_to_file()
-            components.html("""
-            <script>
-                window.parent.location.reload();
-            </script>
-            """, height=0)
+    for thread_id, thread_data in sorted(
+        st.session_state.threads.items(), 
+        key=lambda x: x[1]["created_at"], 
+        reverse=True
+    )[:5]:  # Show only 5 most recent on mobile
+        is_active = thread_id == st.session_state.current_thread_id
+        if st.button(
+            f"{'📌' if is_active else '💭'} {thread_data['title'][:25]}",
+            key=f"mobile_thread_{thread_id}",
+            use_container_width=True,
+            type="primary" if is_active else "secondary"
+        ):
+            if thread_id != st.session_state.current_thread_id:
+                switch_thread(thread_id)
+                st.rerun()
+    
+    st.divider()
+    
+    if st.button("➕ New Conversation", use_container_width=True, key="mobile_btn_new"):
+        create_new_thread()
+        st.rerun()
+    
+    st.divider()
+    st.markdown("**🌐 Language**")
+    selected_lang = st.selectbox(
+        "Language",
+        options=list(LANGUAGE_OPTIONS.keys()),
+        index=0,
+        key="mobile_lang_sel",
+        label_visibility="collapsed"
+    )
+    st.session_state.preferred_language = LANGUAGE_OPTIONS[selected_lang]
+    
+    st.divider()
+    mode_label = "☀️ Day Mode" if st.session_state.dark_mode else "🌙 Night Mode"
+    if st.button(mode_label, use_container_width=True, key="mobile_btn_dark"):
+        st.session_state.dark_mode = not st.session_state.dark_mode
+        save_threads_to_file()
+        components.html("""
+        <script>
+            window.parent.location.reload();
+        </script>
+        """, height=0)
 
 # Get current thread
 current_thread = get_current_thread()
