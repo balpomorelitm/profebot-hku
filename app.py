@@ -116,6 +116,50 @@ hide_streamlit_style = """
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
+# Add custom sidebar toggle button
+sidebar_toggle_button = """
+<style>
+    .custom-sidebar-toggle {
+        position: fixed;
+        top: 1rem;
+        left: 1rem;
+        z-index: 999999;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 600;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        transition: all 0.3s ease;
+    }
+    .custom-sidebar-toggle:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+    }
+</style>
+<button class="custom-sidebar-toggle" onclick="
+    const sidebar = window.parent.document.querySelector('[data-testid=stSidebar]');
+    if (sidebar) {
+        const isCollapsed = sidebar.getAttribute('aria-expanded') === 'false';
+        if (isCollapsed) {
+            sidebar.setAttribute('aria-expanded', 'true');
+            sidebar.style.transform = 'translateX(0)';
+        } else {
+            sidebar.setAttribute('aria-expanded', 'false');
+            sidebar.style.transform = 'translateX(-100%)';
+        }
+    }
+    const collapseBtn = window.parent.document.querySelector('[data-testid=collapsedControl]');
+    if (collapseBtn) {
+        collapseBtn.click();
+    }
+">☰ Menu</button>
+"""
+st.markdown(sidebar_toggle_button, unsafe_allow_html=True)
+
 # ==========================================
 # CSS LOADING FROM FILES
 # ==========================================
