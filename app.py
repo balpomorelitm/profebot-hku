@@ -76,6 +76,17 @@ hide_streamlit_style = """
         background-color: transparent !important;
     }
     
+    /* NUCLEAR OPTION: Hide everything in header except sidebar button */
+    header[data-testid="stHeader"] > div:first-child > div {
+        display: none !important;
+    }
+    
+    /* Keep only the sidebar toggle button visible */
+    header[data-testid="stHeader"] button[kind="header"] {
+        display: block !important;
+        visibility: visible !important;
+    }
+    
     /* Hide hamburger menu, deploy button, and other header items */
     #MainMenu {visibility: hidden;}
     .stDeployButton {display: none !important;}
@@ -174,6 +185,49 @@ hide_streamlit_style = """
 </style>
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+
+# ==========================================
+# JAVASCRIPT TO REMOVE FORK BUTTON
+# ==========================================
+import streamlit.components.v1 as components
+
+remove_fork_script = """
+<script>
+// Remove Fork button with extreme prejudice
+function removeForkButton() {
+    // Remove all links in header
+    const headerLinks = window.parent.document.querySelectorAll('header a');
+    headerLinks.forEach(link => {
+        link.style.display = 'none';
+        link.remove();
+    });
+    
+    // Remove all iframes
+    const iframes = window.parent.document.querySelectorAll('header iframe');
+    iframes.forEach(iframe => {
+        iframe.style.display = 'none';
+        iframe.remove();
+    });
+    
+    // Remove any element containing "fork" or "github"
+    const allElements = window.parent.document.querySelectorAll('header *');
+    allElements.forEach(el => {
+        const text = el.textContent?.toLowerCase() || '';
+        const href = el.getAttribute('href')?.toLowerCase() || '';
+        if (text.includes('fork') || text.includes('github') || href.includes('github')) {
+            el.style.display = 'none';
+            el.remove();
+        }
+    });
+}
+
+// Run immediately and on every rerun
+removeForkButton();
+setInterval(removeForkButton, 500);
+</script>
+"""
+
+components.html(remove_fork_script, height=0)
 
 # ==========================================
 # CSS LOADING FROM FILES
