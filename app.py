@@ -116,8 +116,8 @@ hide_streamlit_style = """
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
-# Add custom sidebar toggle button with working JavaScript
-sidebar_toggle_button = """
+# Add custom sidebar toggle button
+sidebar_toggle_html = """
 <style>
     .custom-sidebar-toggle {
         position: fixed;
@@ -140,34 +140,27 @@ sidebar_toggle_button = """
         box-shadow: 0 6px 16px rgba(0,0,0,0.2);
     }
 </style>
-<script>
-    function toggleSidebar() {
-        const parent = window.parent.document;
-        
-        // Try to find the native collapse button and click it
-        const collapseBtn = parent.querySelector('[data-testid="collapsedControl"]');
-        if (collapseBtn) {
-            collapseBtn.click();
-            return;
-        }
-        
-        // Fallback: try to find the sidebar and toggle it manually
-        const sidebar = parent.querySelector('[data-testid="stSidebar"]');
-        if (sidebar) {
-            const currentDisplay = window.getComputedStyle(sidebar).transform;
-            if (currentDisplay.includes('matrix')) {
-                // Sidebar is collapsed, open it
-                sidebar.style.transform = 'translateX(0)';
-            } else {
-                // Sidebar is open, collapse it
-                sidebar.style.transform = 'translateX(-100%)';
-            }
-        }
-    }
-</script>
-<button class="custom-sidebar-toggle" onclick="toggleSidebar()">☰ Menu</button>
+<button class="custom-sidebar-toggle" id="sidebarToggleBtn">☰ Menu</button>
 """
-components.html(sidebar_toggle_button, height=0)
+st.markdown(sidebar_toggle_html, unsafe_allow_html=True)
+
+# JavaScript to make the button work
+toggle_script = """
+<script>
+    setTimeout(function() {
+        const btn = document.getElementById('sidebarToggleBtn');
+        if (btn) {
+            btn.addEventListener('click', function() {
+                const collapseBtn = window.parent.document.querySelector('[data-testid="collapsedControl"]');
+                if (collapseBtn) {
+                    collapseBtn.click();
+                }
+            });
+        }
+    }, 100);
+</script>
+"""
+components.html(toggle_script, height=0)
 
 # ==========================================
 # CSS LOADING FROM FILES
