@@ -81,6 +81,13 @@ hide_streamlit_style = """
     [data-testid="stStatusWidget"] {visibility: hidden !important;}
     [data-testid="stDecoration"] {visibility: hidden !important;}
     
+    /* Hide GitHub link/button (bottom right) */
+    .viewerBadge_container__1QSob {display: none !important;}
+    .viewerBadge_link__1S137 {display: none !important;}
+    .styles_viewerBadge__1yB5_ {display: none !important;}
+    [data-testid="stAppViewBlockContainer"] > div:last-child {display: none !important;}
+    iframe[title="streamlit_app"] {display: none !important;}
+    
     /* Remove extra top padding caused by hiding the header */
     .block-container {
         padding-top: 1rem !important; 
