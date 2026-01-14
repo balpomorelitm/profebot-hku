@@ -1259,7 +1259,7 @@ def initialize_session_state():
             "title": "New Conversation",
             "messages": [{
                 "role": "assistant", 
-                "content": "¡Hola! 👋 I am **ProfeBot**, your Spanish Year 1 tutor. Ask me about Spanish grammar, vocabulary, or the course!"
+                "content": "Hello! 👋 I'm **ProfeBot**, your Spanish Year 1 tutor at HKU. I'm here to help you with Spanish grammar, vocabulary, exercises, and course questions. What would you like to learn today?"
             }],
             "created_at": datetime.now(),
             "suggestions": []
@@ -1617,7 +1617,7 @@ def create_new_thread():
         "title": f"New Conversation {st.session_state.thread_counter}",
         "messages": [{
             "role": "assistant", 
-            "content": "¡Hola! 👋 I am **ProfeBot**. What would you like to learn today?"
+            "content": "Hello! 👋 Ready to continue learning Spanish? What would you like to practice today?"
         }],
         "created_at": datetime.now(),
         "suggestions": []
