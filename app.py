@@ -1343,80 +1343,24 @@ def initialize_session_state():
         st.session_state.quiz_results = None
 
 # ==========================================
-# PERSISTENCE FUNCTIONS
+# PERSISTENCE FUNCTIONS (DISABLED - Each user has independent session)
 # ==========================================
 def save_threads_to_file():
-    """Save all threads to a local JSON file."""
-    try:
-        threads_data = {}
-        for thread_id, thread in st.session_state.threads.items():
-            threads_data[thread_id] = {
-                "title": thread["title"],
-                "messages": thread["messages"],
-                "created_at": thread["created_at"].isoformat(),
-                "suggestions": thread.get("suggestions", [])
-            }
-        
-        with open(THREADS_FILE, "w", encoding="utf-8") as f:
-            json.dump({
-                "threads": threads_data,
-                "current_thread_id": st.session_state.current_thread_id,
-                "thread_counter": st.session_state.thread_counter,
-                "message_count": st.session_state.message_count,
-                "dark_mode": st.session_state.dark_mode,
-                "preferred_language": st.session_state.preferred_language,
-                "custom_language": st.session_state.custom_language
-            }, f, ensure_ascii=False, indent=2)
-        logger.info(f"Saved {len(threads_data)} threads to {THREADS_FILE}")
-    except Exception as e:
-        logger.error(f"Error saving threads: {e}")
+    """Disabled - Sessions are independent per user."""
+    # Do nothing - each user's session_state is isolated
+    pass
 
 def load_threads_from_file():
-    """Load threads from local JSON file."""
-    try:
-        if THREADS_FILE.exists():
-            with open(THREADS_FILE, "r", encoding="utf-8") as f:
-                data = json.load(f)
-            
-            # Restore threads
-            threads = {}
-            for thread_id, thread_data in data.get("threads", {}).items():
-                threads[thread_id] = {
-                    "title": thread_data["title"],
-                    "messages": thread_data["messages"],
-                    "created_at": datetime.fromisoformat(thread_data["created_at"]),
-                    "suggestions": thread_data.get("suggestions", [])
-                }
-            
-            if threads:
-                st.session_state.threads = threads
-                st.session_state.current_thread_id = data.get("current_thread_id", list(threads.keys())[0])
-                st.session_state.thread_counter = data.get("thread_counter", len(threads))
-                st.session_state.message_count = data.get("message_count", 0)
-                st.session_state.dark_mode = data.get("dark_mode", False)
-                st.session_state.preferred_language = data.get("preferred_language", "English")
-                st.session_state.custom_language = data.get("custom_language", "")
-                logger.info(f"Loaded {len(threads)} threads from {THREADS_FILE}")
-                return True
-    except Exception as e:
-        logger.error(f"Error loading threads: {e}")
+    """Disabled - Sessions are independent per user."""
+    # Do nothing - each user starts fresh
     return False
 
 initialize_session_state()
 
-# Try to load saved threads
+# Each user gets their own independent session - no file loading
 if "threads_loaded" not in st.session_state:
-    load_threads_from_file()
     st.session_state.threads_loaded = True
-    
-    # Clean up any old "Chat cleared" messages from previous versions
-    for thread_id, thread_data in st.session_state.threads.items():
-        if thread_data["messages"] and len(thread_data["messages"]) > 0:
-            first_msg = thread_data["messages"][0]
-            if "Chat cleared" in first_msg.get("content", ""):
-                # Replace with proper welcome message
-                first_msg["content"] = "Hello! 👋 I'm **ProfeBot**, your Spanish Year 1 tutor at HKU. I'm here to help you with Spanish grammar, vocabulary, exercises, and course questions. What would you like to learn today?"
-    save_threads_to_file()  # Save cleaned threads
+    # User starts with fresh session - no shared data
 
 # Apply custom CSS - try external files first, fallback to inline
 try:
