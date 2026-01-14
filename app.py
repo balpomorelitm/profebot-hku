@@ -1356,6 +1356,15 @@ initialize_session_state()
 if "threads_loaded" not in st.session_state:
     load_threads_from_file()
     st.session_state.threads_loaded = True
+    
+    # Clean up any old "Chat cleared" messages from previous versions
+    for thread_id, thread_data in st.session_state.threads.items():
+        if thread_data["messages"] and len(thread_data["messages"]) > 0:
+            first_msg = thread_data["messages"][0]
+            if "Chat cleared" in first_msg.get("content", ""):
+                # Replace with proper welcome message
+                first_msg["content"] = "Hello! 👋 I'm **ProfeBot**, your Spanish Year 1 tutor at HKU. I'm here to help you with Spanish grammar, vocabulary, exercises, and course questions. What would you like to learn today?"
+    save_threads_to_file()  # Save cleaned threads
 
 # Apply custom CSS - try external files first, fallback to inline
 try:
