@@ -81,14 +81,24 @@ hide_streamlit_style = """
     .stDeployButton {display: none !important;}
     header .stActionButton {display: none !important;}
     
-    /* Keep ONLY the sidebar toggle button visible */
-    [data-testid="collapsedControl"] {
+    /* FORCE SIDEBAR TO ALWAYS BE VISIBLE */
+    [data-testid="stSidebar"] {
         display: block !important;
         visibility: visible !important;
+        transform: translateX(0) !important;
+        position: relative !important;
     }
     
-    /* Hide toolbar icons in header */
-    header button[kind="header"]:not([data-testid="collapsedControl"] button) {
+    [data-testid="stSidebar"][aria-expanded="false"] {
+        transform: translateX(0) !important;
+    }
+    
+    /* Hide the collapse/expand button since sidebar is always visible */
+    [data-testid="collapsedControl"] {
+        display: none !important;
+    }
+    
+    button[kind="header"] {
         display: none !important;
     }
     
@@ -115,52 +125,6 @@ hide_streamlit_style = """
 </style>
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
-
-# Add custom sidebar toggle button
-sidebar_toggle_html = """
-<style>
-    .custom-sidebar-toggle {
-        position: fixed;
-        top: 1rem;
-        left: 1rem;
-        z-index: 999999;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border: none;
-        border-radius: 8px;
-        padding: 0.75rem 1rem;
-        cursor: pointer;
-        font-size: 1rem;
-        font-weight: 600;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        transition: all 0.3s ease;
-    }
-    .custom-sidebar-toggle:hover {
-        transform: scale(1.05);
-        box-shadow: 0 6px 16px rgba(0,0,0,0.2);
-    }
-</style>
-<button class="custom-sidebar-toggle" id="sidebarToggleBtn">☰ Menu</button>
-"""
-st.markdown(sidebar_toggle_html, unsafe_allow_html=True)
-
-# JavaScript to make the button work
-toggle_script = """
-<script>
-    setTimeout(function() {
-        const btn = document.getElementById('sidebarToggleBtn');
-        if (btn) {
-            btn.addEventListener('click', function() {
-                const collapseBtn = window.parent.document.querySelector('[data-testid="collapsedControl"]');
-                if (collapseBtn) {
-                    collapseBtn.click();
-                }
-            });
-        }
-    }, 100);
-</script>
-"""
-components.html(toggle_script, height=0)
 
 # ==========================================
 # CSS LOADING FROM FILES
