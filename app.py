@@ -189,15 +189,15 @@ hide_streamlit_style = """
     }
     
     /* ===== MOBILE MENU VISIBILITY ===== */
-    /* Hide mobile menu expander on desktop - target the container with mobile-menu key */
-    [data-testid="stVerticalBlock"] > [data-testid="stVerticalBlock"]:first-child > [data-testid="stExpander"]:first-of-type {
+    /* Hide mobile menu expander on desktop */
+    .main [data-testid="stExpander"]:first-of-type {
         display: none !important;
     }
     
     /* ===== MOBILE RESPONSIVE DESIGN ===== */
     @media (max-width: 768px) {
         /* SHOW mobile menu on mobile */
-        [data-testid="stVerticalBlock"] > [data-testid="stVerticalBlock"]:first-child > [data-testid="stExpander"]:first-of-type {
+        .main [data-testid="stExpander"]:first-of-type {
             display: block !important;
         }
         
