@@ -87,9 +87,14 @@ hide_streamlit_style = """
     header iframe {display: none !important;}
     iframe[src*="github"] {display: none !important;}
     iframe[title] {display: none !important;}
-    a[target="_blank"] {visibility: hidden !important; display: none !important;}
+    iframe {display: none !important;}
+    a[href*="github.com"] {display: none !important;}
+    a[href*="streamlit.io"] {display: none !important;}
     button[data-testid*="fork"] {display: none !important;}
     div[data-testid*="fork"] {display: none !important;}
+    header > div > div > a {display: none !important;}
+    [class*="viewerBadge"] {display: none !important;}
+    [class*="GitHubBadge"] {display: none !important;}
     
     /* SIDEBAR STYLING - 15% narrower */
     [data-testid="stSidebar"] {
