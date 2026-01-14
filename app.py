@@ -107,15 +107,15 @@ hide_streamlit_style = """
     [class*="viewerBadge"] {display: none !important;}
     [class*="GitHubBadge"] {display: none !important;}
     
-    /* SIDEBAR STYLING - 10% narrower than original */
+    /* SIDEBAR STYLING */
     [data-testid="stSidebar"] {
-        min-width: 16.065rem !important;
-        max-width: 16.065rem !important;
-        width: 16.065rem !important;
+        min-width: 18.47rem !important;
+        max-width: 18.47rem !important;
+        width: 18.47rem !important;
     }
     
     [data-testid="stSidebar"] > div:first-child {
-        width: 16.065rem !important;
+        width: 18.47rem !important;
     }
     
     /* Make native collapse button always visible */
@@ -1813,8 +1813,12 @@ try:
             if st.button(mode_label, use_container_width=True, key="btn_dark"):
                 st.session_state.dark_mode = not st.session_state.dark_mode
                 save_threads_to_file()
-                # Don't rerun immediately - let the page refresh naturally
-                st.success("✅ Theme changed! Refresh the page to apply.")
+                # Force full page reload to avoid blank screen
+                components.html("""
+                <script>
+                    window.parent.location.reload();
+                </script>
+                """, height=0)
         
         # ===== EXPORT =====
         with st.expander("📥 Export Chat"):
