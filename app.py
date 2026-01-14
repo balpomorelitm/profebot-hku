@@ -1659,9 +1659,6 @@ def process_user_input(user_text: str, quick_action: str = None):
 with st.sidebar:
     st.markdown('<p class="sidebar-title">🎓 <span class="sidebar-title-text">ProfeBot Control</span></p>', unsafe_allow_html=True)
     
-    # Debug - esto debería aparecer
-    st.write("DEBUG: Sidebar loaded")
-    
     # Thread History
     st.subheader("💬 Conversations")
     
@@ -2300,41 +2297,13 @@ if prompt := st.chat_input("Type your question here... (any language)", key="mai
     process_user_input(prompt)
     st.rerun()
 
-# Inject floating message history panel
-st.markdown(history_panel_html, unsafe_allow_html=True)
+# Temporarily disabled: Inject floating message history panel
+# st.markdown(history_panel_html, unsafe_allow_html=True)
 
-# Inject JavaScript for click handlers using components.html
-scroll_js = f'''
-<script>
-(function() {{
-    function setupHistoryClickHandlers() {{
-        var items = window.parent.document.querySelectorAll('.message-history-panel .history-item');
-        items.forEach(function(item) {{
-            if (!item.hasAttribute('data-click-setup')) {{
-                item.setAttribute('data-click-setup', 'true');
-                item.addEventListener('click', function() {{
-                    var idx = this.getAttribute('data-idx');
-                    var targetId = 'msg_' + idx;
-                    var target = window.parent.document.getElementById(targetId);
-                    if (target) {{
-                        target.scrollIntoView({{ behavior: 'smooth', block: 'center' }});
-                        target.style.transition = 'background-color 0.3s';
-                        target.style.backgroundColor = 'rgba(88, 166, 255, 0.4)';
-                        target.style.borderRadius = '8px';
-                        target.style.padding = '10px';
-                        setTimeout(function() {{
-                            target.style.backgroundColor = 'transparent';
-                        }}, 2000);
-                    }}
-                }});
-            }}
-        }});
-    }}
-    // Run multiple times to ensure it catches the elements
-    setTimeout(setupHistoryClickHandlers, 100);
-    setTimeout(setupHistoryClickHandlers, 500);
-    setTimeout(setupHistoryClickHandlers, 1000);
-}})();
-</script>
-'''
-components.html(scroll_js, height=0, scrolling=False)
+# Temporarily disabled: Inject JavaScript for click handlers
+# scroll_js = f'''
+# <script>
+# ...
+# </script>
+# '''
+# components.html(scroll_js, height=0, scrolling=False)
