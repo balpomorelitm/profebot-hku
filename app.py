@@ -98,39 +98,28 @@ hide_streamlit_style = """
         width: 17.85rem !important;
     }
     
-    /* Custom sidebar toggle button - always visible top right */
-    .sidebar-toggle-btn {
-        position: fixed;
-        top: 1rem;
-        right: 1rem;
-        z-index: 999999;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border: none;
-        border-radius: 50%;
-        width: 40px;
-        height: 40px;
-        cursor: pointer;
-        font-size: 20px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        transition: all 0.3s ease;
-    }
-    
-    .sidebar-toggle-btn:hover {
-        transform: scale(1.1);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    }
-    
-    /* Hide native Streamlit collapse button */
+    /* Make native collapse button always visible */
     [data-testid="collapsedControl"] {
-        display: none !important;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        position: fixed !important;
+        left: 4px !important;
+        top: 4px !important;
+        z-index: 999999 !important;
     }
     
     button[kind="header"] {
-        display: none !important;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
+    /* Ensure button visible when collapsed */
+    [data-testid="stSidebar"][aria-expanded="false"] ~ [data-testid="collapsedControl"] {
+        display: block !important;
+        visibility: visible !important;
+        left: 4px !important;
     }
     
     /* Hide footer */
@@ -156,66 +145,6 @@ hide_streamlit_style = """
 </style>
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
-
-# ==========================================
-# CUSTOM SIDEBAR TOGGLE BUTTON
-# ==========================================
-import streamlit.components.v1 as components
-
-sidebar_toggle_code = """
-<style>
-    .sidebar-toggle-container {
-        position: fixed;
-        top: 1rem;
-        right: 1rem;
-        z-index: 999999;
-    }
-    
-    .sidebar-toggle-btn {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border: none;
-        border-radius: 50%;
-        width: 48px;
-        height: 48px;
-        cursor: pointer;
-        font-size: 24px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        transition: all 0.3s ease;
-    }
-    
-    .sidebar-toggle-btn:hover {
-        transform: scale(1.1);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    }
-</style>
-
-<div class="sidebar-toggle-container">
-    <button class="sidebar-toggle-btn" onclick="toggleSidebar()" id="toggleBtn">☰</button>
-</div>
-
-<script>
-function toggleSidebar() {
-    const sidebar = window.parent.document.querySelector('[data-testid="stSidebar"]');
-    if (sidebar) {
-        const button = sidebar.querySelector('button[kind="header"]');
-        if (button) {
-            button.click();
-            // Toggle icon
-            setTimeout(() => {
-                const isCollapsed = sidebar.getAttribute('aria-expanded') === 'false';
-                document.getElementById('toggleBtn').innerHTML = isCollapsed ? '☰' : '✕';
-            }, 100);
-        }
-    }
-}
-</script>
-"""
-
-components.html(sidebar_toggle_code, height=0)
 
 # ==========================================
 # CSS LOADING FROM FILES

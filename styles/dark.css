@@ -288,6 +288,26 @@ header, [data-testid="stHeader"] {
     border-radius: 20px !important;
 }
 
+/* Fix placeholder text color in dark mode */
+.stTextInput input::placeholder, 
+[data-testid="stChatInput"] textarea::placeholder {
+    color: var(--text-secondary) !important;
+    opacity: 0.7 !important;
+}
+
+/* Remove white semicircle/decoration on left side of input */
+[data-testid="stChatInput"]::before,
+[data-testid="stChatInput"]::after,
+[data-testid="stChatInputContainer"]::before,
+[data-testid="stChatInputContainer"]::after {
+    display: none !important;
+}
+
+[data-testid="stChatInput"] > div::before,
+[data-testid="stChatInput"] > div::after {
+    display: none !important;
+}
+
 /* Chat input container/wrapper */
 [data-testid="stChatInput"] {
     background-color: var(--bg-color) !important;
