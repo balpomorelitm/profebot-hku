@@ -1668,176 +1668,176 @@ try:
     with st.sidebar:
         st.write("🔍 DEBUG: Inside sidebar context")
         st.markdown("### 🎓 ProfeBot Control")
-    
-    # ===== CONVERSATIONS =====
-    st.markdown("#### 💬 Conversations")
-    
-    for thread_id, thread_data in sorted(
-        st.session_state.threads.items(), 
-        key=lambda x: x[1]["created_at"], 
-        reverse=True
-    ):
-        is_active = thread_id == st.session_state.current_thread_id
         
-        col1, col2 = st.columns([4, 1])
+        # ===== CONVERSATIONS =====
+        st.markdown("#### 💬 Conversations")
         
-        with col1:
-            if st.button(
-                f"{'📌' if is_active else '💭'} {thread_data['title'][:20]}",
-                key=f"thread_{thread_id}",
-                use_container_width=True,
-                type="primary" if is_active else "secondary"
-            ):
-                if thread_id != st.session_state.current_thread_id:
-                    switch_thread(thread_id)
-                    st.rerun()
+        for thread_id, thread_data in sorted(
+            st.session_state.threads.items(), 
+            key=lambda x: x[1]["created_at"], 
+            reverse=True
+        ):
+            is_active = thread_id == st.session_state.current_thread_id
+            
+            col1, col2 = st.columns([4, 1])
+            
+            with col1:
+                if st.button(
+                    f"{'📌' if is_active else '💭'} {thread_data['title'][:20]}",
+                    key=f"thread_{thread_id}",
+                    use_container_width=True,
+                    type="primary" if is_active else "secondary"
+                ):
+                    if thread_id != st.session_state.current_thread_id:
+                        switch_thread(thread_id)
+                        st.rerun()
+            
+            with col2:
+                if len(st.session_state.threads) > 1:
+                    if st.button("🗑️", key=f"del_{thread_id}"):
+                        delete_thread(thread_id)
+                        st.rerun()
         
-        with col2:
-            if len(st.session_state.threads) > 1:
-                if st.button("🗑️", key=f"del_{thread_id}"):
-                    delete_thread(thread_id)
-                    st.rerun()
-    
-    st.caption(f"{len(st.session_state.threads)} conversation(s)")
-    st.divider()
-    
-    # ===== ACTIONS =====
-    st.markdown("#### 🔧 Actions")
-    
-    col_a, col_b = st.columns(2)
-    
-    with col_a:
-        if st.button("➕ New", use_container_width=True, key="btn_new"):
-            create_new_thread()
-            st.rerun()
-    
-    with col_b:
-        if st.button("🗑️ Clear", use_container_width=True, key="btn_clear"):
-            current_thread = get_current_thread()
-            current_thread["messages"] = [{
-                "role": "assistant", 
-                "content": "¡Hola! 👋 Chat cleared!"
-            }]
-            current_thread["suggestions"] = []
-            st.session_state.selected_message_index = None
-            save_threads_to_file()
-            st.rerun()
-    
-    st.divider()
-    
-    # ===== SETTINGS =====
-    with st.expander("⚙️ Settings"):
-        st.markdown("**🌐 Language**")
-        selected_lang = st.selectbox(
-            "Select language",
-            options=list(LANGUAGE_OPTIONS.keys()),
-            index=0,
-            key="lang_sel",
-            label_visibility="collapsed"
-        )
-        st.session_state.preferred_language = LANGUAGE_OPTIONS[selected_lang]
+        st.caption(f"{len(st.session_state.threads)} conversation(s)")
+        st.divider()
         
-        if st.session_state.preferred_language == "custom":
-            custom_lang = st.text_input(
-                "Your language:",
-                value=st.session_state.custom_language,
-                placeholder="Français, Deutsch, 日本語",
-                key="custom_lang"
+        # ===== ACTIONS =====
+        st.markdown("#### 🔧 Actions")
+        
+        col_a, col_b = st.columns(2)
+        
+        with col_a:
+            if st.button("➕ New", use_container_width=True, key="btn_new"):
+                create_new_thread()
+                st.rerun()
+        
+        with col_b:
+            if st.button("🗑️ Clear", use_container_width=True, key="btn_clear"):
+                current_thread = get_current_thread()
+                current_thread["messages"] = [{
+                    "role": "assistant", 
+                    "content": "¡Hola! 👋 Chat cleared!"
+                }]
+                current_thread["suggestions"] = []
+                st.session_state.selected_message_index = None
+                save_threads_to_file()
+                st.rerun()
+        
+        st.divider()
+        
+        # ===== SETTINGS =====
+        with st.expander("⚙️ Settings"):
+            st.markdown("**🌐 Language**")
+            selected_lang = st.selectbox(
+                "Select language",
+                options=list(LANGUAGE_OPTIONS.keys()),
+                index=0,
+                key="lang_sel",
+                label_visibility="collapsed"
             )
-            st.session_state.custom_language = custom_lang
-        
-        st.divider()
-        
-        st.markdown("**🌙 Appearance**")
-        mode_label = "☀️ Day Mode" if st.session_state.dark_mode else "🌙 Night Mode"
-        if st.button(mode_label, use_container_width=True, key="btn_dark"):
-            st.session_state.dark_mode = not st.session_state.dark_mode
-            save_threads_to_file()
-            st.rerun()
-    
-    # ===== EXPORT =====
-    with st.expander("📥 Export Chat"):
-        current_thread = get_current_thread()
-        
-        txt_content = export_conversation_txt(current_thread["messages"])
-        st.download_button(
-            "📄 TXT",
-            txt_content,
-            f"chat_{datetime.now().strftime('%Y%m%d_%H%M')}.txt",
-            "text/plain",
-            use_container_width=True
-        )
-        
-        md_content = export_conversation_md(current_thread["messages"])
-        st.download_button(
-            "📝 Markdown",
-            md_content,
-            f"chat_{datetime.now().strftime('%Y%m%d_%H%M')}.md",
-            "text/markdown",
-            use_container_width=True
-        )
-        
-        if DOCX_AVAILABLE:
-            docx_buffer = export_conversation_docx(current_thread["messages"])
-            if docx_buffer:
-                st.download_button(
-                    "📘 Word",
-                    docx_buffer,
-                    f"chat_{datetime.now().strftime('%Y%m%d_%H%M')}.docx",
-                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                    use_container_width=True
+            st.session_state.preferred_language = LANGUAGE_OPTIONS[selected_lang]
+            
+            if st.session_state.preferred_language == "custom":
+                custom_lang = st.text_input(
+                    "Your language:",
+                    value=st.session_state.custom_language,
+                    placeholder="Français, Deutsch, 日本語",
+                    key="custom_lang"
                 )
-    
-    # ===== PROGRESS =====
-    with st.expander("📈 My Progress"):
-        profile = load_user_profile()
+                st.session_state.custom_language = custom_lang
+            
+            st.divider()
+            
+            st.markdown("**🌙 Appearance**")
+            mode_label = "☀️ Day Mode" if st.session_state.dark_mode else "🌙 Night Mode"
+            if st.button(mode_label, use_container_width=True, key="btn_dark"):
+                st.session_state.dark_mode = not st.session_state.dark_mode
+                save_threads_to_file()
+                st.rerun()
         
-        streak = profile.get("learning_streak", 0)
-        if streak > 0:
-            st.markdown(f"### 🔥 {streak} day streak!")
-        else:
-            st.markdown("### Start your streak! 🚀")
+        # ===== EXPORT =====
+        with st.expander("📥 Export Chat"):
+            current_thread = get_current_thread()
+            
+            txt_content = export_conversation_txt(current_thread["messages"])
+            st.download_button(
+                "📄 TXT",
+                txt_content,
+                f"chat_{datetime.now().strftime('%Y%m%d_%H%M')}.txt",
+                "text/plain",
+                use_container_width=True
+            )
+            
+            md_content = export_conversation_md(current_thread["messages"])
+            st.download_button(
+                "📝 Markdown",
+                md_content,
+                f"chat_{datetime.now().strftime('%Y%m%d_%H%M')}.md",
+                "text/markdown",
+                use_container_width=True
+            )
+            
+            if DOCX_AVAILABLE:
+                docx_buffer = export_conversation_docx(current_thread["messages"])
+                if docx_buffer:
+                    st.download_button(
+                        "📘 Word",
+                        docx_buffer,
+                        f"chat_{datetime.now().strftime('%Y%m%d_%H%M')}.docx",
+                        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                        use_container_width=True
+                    )
         
-        total = profile.get("total_interactions", 0)
-        st.caption(f"Total questions: {total}")
+        # ===== PROGRESS =====
+        with st.expander("📈 My Progress"):
+            profile = load_user_profile()
+            
+            streak = profile.get("learning_streak", 0)
+            if streak > 0:
+                st.markdown(f"### 🔥 {streak} day streak!")
+            else:
+                st.markdown("### Start your streak! 🚀")
+            
+            total = profile.get("total_interactions", 0)
+            st.caption(f"Total questions: {total}")
+            
+            scores = profile.get("quiz_scores", [])
+            if scores:
+                recent = scores[-10:]
+                avg = sum(s["percentage"] for s in recent) / len(recent)
+                st.markdown("**📝 Quiz Average**")
+                st.progress(avg / 100)
+                st.caption(f"{avg:.0f}% ({len(scores)} quizzes)")
         
-        scores = profile.get("quiz_scores", [])
-        if scores:
-            recent = scores[-10:]
-            avg = sum(s["percentage"] for s in recent) / len(recent)
-            st.markdown("**📝 Quiz Average**")
-            st.progress(avg / 100)
-            st.caption(f"{avg:.0f}% ({len(scores)} quizzes)")
-    
-    # ===== ABOUT =====
-    with st.expander("ℹ️ About"):
-        st.markdown("""
-        **ProfeBot** - AI Spanish Tutor
-        
-        - 📚 Context-aware
-        - 🎯 Personalized
-        - 💬 Interactive
-        - 🌐 Multilingual
-        """)
+        # ===== ABOUT =====
+        with st.expander("ℹ️ About"):
+            st.markdown("""
+            **ProfeBot** - AI Spanish Tutor
+            
+            - 📚 Context-aware
+            - 🎯 Personalized
+            - 💬 Interactive
+            - 🌐 Multilingual
+            """)
+            
+            st.divider()
+            
+            if st.session_state.context_loaded:
+                if "❌" not in st.session_state.contexto:
+                    st.success("✓ Connected")
+                else:
+                    st.error("✗ Error")
+            
+            if st.session_state.last_sync:
+                st.caption(f"Last sync: {st.session_state.last_sync.strftime('%H:%M:%S')}")
+            
+            st.caption(f"Messages: {st.session_state.message_count}")
+            st.caption(f"Model: {DEPLOYMENT_ID}")
         
         st.divider()
+        st.markdown("[🏛️ HKU Spanish Dept](https://spanish.hku.hk/)", unsafe_allow_html=True)
         
-        if st.session_state.context_loaded:
-            if "❌" not in st.session_state.contexto:
-                st.success("✓ Connected")
-            else:
-                st.error("✗ Error")
-        
-        if st.session_state.last_sync:
-            st.caption(f"Last sync: {st.session_state.last_sync.strftime('%H:%M:%S')}")
-        
-        st.caption(f"Messages: {st.session_state.message_count}")
-        st.caption(f"Model: {DEPLOYMENT_ID}")
-    
-    st.divider()
-    st.markdown("[🏛️ HKU Spanish Dept](https://spanish.hku.hk/)", unsafe_allow_html=True)
-    
-    st.session_state.debug_logs.append("🔍 Sidebar completed successfully")
+        st.session_state.debug_logs.append("🔍 Sidebar completed successfully")
 
 except Exception as e:
     error_msg = f"🔍 DEBUG: Sidebar error: {e}"
