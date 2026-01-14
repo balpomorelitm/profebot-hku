@@ -2301,12 +2301,21 @@ def check_for_quiz_in_last_response() -> Optional[Dict]:
 mobile_menu_html = """
 <style>
     .mobile-menu-container {
-        display: none;
+        display: none !important;
     }
     
     @media (max-width: 768px) {
         .mobile-menu-container {
             display: block !important;
+        }
+    }
+    
+    @media (min-width: 769px) {
+        .mobile-menu-container {
+            display: none !important;
+            visibility: hidden !important;
+            height: 0 !important;
+            overflow: hidden !important;
         }
     }
 </style>
