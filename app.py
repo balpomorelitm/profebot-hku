@@ -107,15 +107,15 @@ hide_streamlit_style = """
     [class*="viewerBadge"] {display: none !important;}
     [class*="GitHubBadge"] {display: none !important;}
     
-    /* SIDEBAR STYLING - 15% narrower */
+    /* SIDEBAR STYLING - 10% narrower than original */
     [data-testid="stSidebar"] {
-        min-width: 17.85rem !important;
-        max-width: 17.85rem !important;
-        width: 17.85rem !important;
+        min-width: 16.065rem !important;
+        max-width: 16.065rem !important;
+        width: 16.065rem !important;
     }
     
     [data-testid="stSidebar"] > div:first-child {
-        width: 17.85rem !important;
+        width: 16.065rem !important;
     }
     
     /* Make native collapse button always visible */
@@ -1779,24 +1779,9 @@ try:
         # ===== ACTIONS =====
         st.markdown("#### 🔧 Actions")
         
-        col_a, col_b = st.columns(2)
-        
-        with col_a:
-            if st.button("➕ New", use_container_width=True, key="btn_new"):
-                create_new_thread()
-                st.rerun()
-        
-        with col_b:
-            if st.button("🗑️ Clear", use_container_width=True, key="btn_clear"):
-                current_thread = get_current_thread()
-                current_thread["messages"] = [{
-                    "role": "assistant", 
-                    "content": "¡Hola! 👋 Chat cleared!"
-                }]
-                current_thread["suggestions"] = []
-                st.session_state.selected_message_index = None
-                save_threads_to_file()
-                st.rerun()
+        if st.button("➕ New Conversation", use_container_width=True, key="btn_new"):
+            create_new_thread()
+            st.rerun()
         
         st.divider()
         
@@ -1828,7 +1813,8 @@ try:
             if st.button(mode_label, use_container_width=True, key="btn_dark"):
                 st.session_state.dark_mode = not st.session_state.dark_mode
                 save_threads_to_file()
-                st.rerun()
+                # Don't rerun immediately - let the page refresh naturally
+                st.success("✅ Theme changed! Refresh the page to apply.")
         
         # ===== EXPORT =====
         with st.expander("📥 Export Chat"):
