@@ -67,42 +67,36 @@ st.set_page_config(
 # ==========================================
 hide_streamlit_style = """
 <style>
-    /* Hide top header content but keep structure for sidebar toggle */
-    header {visibility: hidden;}
-    header::before {
-        content: "";
-        display: block;
-        visibility: visible;
+    /* Hide header elements but keep sidebar toggle visible */
+    header[data-testid="stHeader"] {
+        background-color: transparent !important;
     }
     
-    /* Force sidebar toggle button to be visible */
-    [data-testid="collapsedControl"] {
-        visibility: visible !important;
-        display: flex !important;
-        position: fixed !important;
-        top: 0.5rem !important;
-        left: 0.5rem !important;
-        z-index: 999999 !important;
-        background: rgba(255, 255, 255, 0.9) !important;
-        padding: 0.5rem !important;
-        border-radius: 0.5rem !important;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+    header[data-testid="stHeader"] > div:first-child {
+        background-color: transparent !important;
     }
     
-    [data-testid="collapsedControl"] button {
-        visibility: visible !important;
-        display: block !important;
-    }
-    
-    /* Hide other header elements */
+    /* Hide hamburger menu, deploy button, and other header items */
     #MainMenu {visibility: hidden;}
-    .stDeployButton {display:none;}
+    .stDeployButton {display: none !important;}
+    header .stActionButton {display: none !important;}
+    
+    /* Keep ONLY the sidebar toggle button visible */
+    [data-testid="collapsedControl"] {
+        display: block !important;
+        visibility: visible !important;
+    }
+    
+    /* Hide toolbar icons in header */
+    header button[kind="header"]:not([data-testid="collapsedControl"] button) {
+        display: none !important;
+    }
     
     /* Hide footer */
     footer {visibility: hidden;}
     
     /* Hide the 'Manage app' button and bottom toolbar */
-    .stAppDeployButton {display:none;}
+    .stAppDeployButton {display: none !important;}
     [data-testid="stToolbar"] {visibility: hidden !important;}
     [data-testid="stStatusWidget"] {visibility: hidden !important;}
     [data-testid="stDecoration"] {visibility: hidden !important;}
@@ -114,9 +108,9 @@ hide_streamlit_style = """
     [data-testid="stAppViewBlockContainer"] > div:last-child {display: none !important;}
     iframe[title="streamlit_app"] {display: none !important;}
     
-    /* Remove extra top padding caused by hiding the header */
+    /* Adjust top padding */
     .block-container {
-        padding-top: 1rem !important; 
+        padding-top: 3rem !important; 
     }
 </style>
 """
