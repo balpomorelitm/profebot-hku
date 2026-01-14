@@ -116,7 +116,7 @@ hide_streamlit_style = """
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
-# Add custom sidebar toggle button
+# Add custom sidebar toggle button with working JavaScript
 sidebar_toggle_button = """
 <style>
     .custom-sidebar-toggle {
@@ -140,25 +140,34 @@ sidebar_toggle_button = """
         box-shadow: 0 6px 16px rgba(0,0,0,0.2);
     }
 </style>
-<button class="custom-sidebar-toggle" onclick="
-    const sidebar = window.parent.document.querySelector('[data-testid=stSidebar]');
-    if (sidebar) {
-        const isCollapsed = sidebar.getAttribute('aria-expanded') === 'false';
-        if (isCollapsed) {
-            sidebar.setAttribute('aria-expanded', 'true');
-            sidebar.style.transform = 'translateX(0)';
-        } else {
-            sidebar.setAttribute('aria-expanded', 'false');
-            sidebar.style.transform = 'translateX(-100%)';
+<script>
+    function toggleSidebar() {
+        const parent = window.parent.document;
+        
+        // Try to find the native collapse button and click it
+        const collapseBtn = parent.querySelector('[data-testid="collapsedControl"]');
+        if (collapseBtn) {
+            collapseBtn.click();
+            return;
+        }
+        
+        // Fallback: try to find the sidebar and toggle it manually
+        const sidebar = parent.querySelector('[data-testid="stSidebar"]');
+        if (sidebar) {
+            const currentDisplay = window.getComputedStyle(sidebar).transform;
+            if (currentDisplay.includes('matrix')) {
+                // Sidebar is collapsed, open it
+                sidebar.style.transform = 'translateX(0)';
+            } else {
+                // Sidebar is open, collapse it
+                sidebar.style.transform = 'translateX(-100%)';
+            }
         }
     }
-    const collapseBtn = window.parent.document.querySelector('[data-testid=collapsedControl]');
-    if (collapseBtn) {
-        collapseBtn.click();
-    }
-">☰ Menu</button>
+</script>
+<button class="custom-sidebar-toggle" onclick="toggleSidebar()">☰ Menu</button>
 """
-st.markdown(sidebar_toggle_button, unsafe_allow_html=True)
+components.html(sidebar_toggle_button, height=0)
 
 # ==========================================
 # CSS LOADING FROM FILES
