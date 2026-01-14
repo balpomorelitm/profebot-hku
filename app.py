@@ -81,16 +81,26 @@ hide_streamlit_style = """
     .stDeployButton {display: none !important;}
     header .stActionButton {display: none !important;}
     
-    /* FORCE SIDEBAR TO ALWAYS BE VISIBLE */
+    /* FORCE SIDEBAR TO ALWAYS BE VISIBLE WITH FULL WIDTH */
     [data-testid="stSidebar"] {
         display: block !important;
         visibility: visible !important;
         transform: translateX(0) !important;
+        min-width: 21rem !important;
+        max-width: 21rem !important;
+        width: 21rem !important;
         position: relative !important;
     }
     
-    [data-testid="stSidebar"][aria-expanded="false"] {
+    [data-testid="stSidebar"] > div:first-child {
+        width: 21rem !important;
         transform: translateX(0) !important;
+    }
+    
+    [data-testid="stSidebar"][aria-expanded="false"],
+    [data-testid="stSidebar"][aria-expanded="true"] {
+        transform: translateX(0) !important;
+        width: 21rem !important;
     }
     
     /* Hide the collapse/expand button since sidebar is always visible */
