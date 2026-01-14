@@ -1715,59 +1715,39 @@ with st.sidebar:
     
     st.divider()
     
-    # Settings
-    st.subheader("⚙️ Settings")
-    
-    # Status indicators
-    st.markdown("**📊 Status**")
-    if st.session_state.context_loaded:
-        if "❌" not in st.session_state.contexto:
-            st.markdown('<div class="status-badge status-success">✓ Connected</div>', unsafe_allow_html=True)
-        else:
-            st.markdown('<div class="status-badge status-error">✗ Error</div>', unsafe_allow_html=True)
-    
-    if st.session_state.last_sync:
-        st.caption(f"Last sync: {st.session_state.last_sync.strftime('%H:%M:%S')}")
-    
-    st.caption(f"Total messages: {st.session_state.message_count}")
-    
-    st.divider()
-    
-    # Language
-    st.markdown("**🌐 Language**")
-    
-    selected_lang = st.selectbox(
-        "Explanation Language",
-        options=list(LANGUAGE_OPTIONS.keys()),
-        index=0,
-        key="lang_selector",
-        label_visibility="collapsed"
-    )
-    
-    st.session_state.preferred_language = LANGUAGE_OPTIONS[selected_lang]
-    
-    if st.session_state.preferred_language == "custom":
-        custom_lang_input = st.text_input(
-            "Your language:",
-            value=st.session_state.custom_language,
-            placeholder="Français, Deutsch, 日本語",
-            key="custom_lang_input"
+    # Settings (as expander)
+    with st.expander("⚙️ Settings", expanded=False):
+        # Language
+        st.markdown("**🌐 Language**")
+        
+        selected_lang = st.selectbox(
+            "Explanation Language",
+            options=list(LANGUAGE_OPTIONS.keys()),
+            index=0,
+            key="lang_selector",
+            label_visibility="collapsed"
         )
-        st.session_state.custom_language = custom_lang_input
-    
-    st.divider()
-    
-    # Night Mode Toggle
-    st.markdown("**🌙 Appearance**")
-    dark_mode_label = "Switch to Day Mode" if st.session_state.dark_mode else "Switch to Night Mode"
-    if st.button(dark_mode_label, use_container_width=True, key="dark_mode_toggle"):
-        st.session_state.dark_mode = not st.session_state.dark_mode
-        save_threads_to_file()  # Persist preference
-        st.rerun()
-    
-    st.divider()
-    st.caption(f"Model: {DEPLOYMENT_ID}")
-    st.caption(f"Temp: 0.4 | Tokens: 1000")
+        
+        st.session_state.preferred_language = LANGUAGE_OPTIONS[selected_lang]
+        
+        if st.session_state.preferred_language == "custom":
+            custom_lang_input = st.text_input(
+                "Your language:",
+                value=st.session_state.custom_language,
+                placeholder="Français, Deutsch, 日本語",
+                key="custom_lang_input"
+            )
+            st.session_state.custom_language = custom_lang_input
+        
+        st.divider()
+        
+        # Night Mode Toggle
+        st.markdown("**🌙 Appearance**")
+        dark_mode_label = "Switch to Day Mode" if st.session_state.dark_mode else "Switch to Night Mode"
+        if st.button(dark_mode_label, use_container_width=True, key="dark_mode_toggle"):
+            st.session_state.dark_mode = not st.session_state.dark_mode
+            save_threads_to_file()  # Persist preference
+            st.rerun()
     
     st.divider()
     
@@ -1864,7 +1844,7 @@ with st.sidebar:
         elif streak >= 3:
             st.info("💪 Keep up the momentum!")
     
-    # About
+    # About (with status info)
     with st.expander("ℹ️ About"):
         st.markdown("""
         **ProfeBot** - AI Spanish Tutor
@@ -1877,11 +1857,30 @@ with st.sidebar:
         
         **Hybrid AI System:**
         - 🚀 DeepSeek-V3 (Fast)
-        - 🧠 GPT-5.1 (Complex)
+        - 🧠 GPT-4.1 (Complex)
         
         ---
-        Made with ❤️ for Spanish Year 1
         """)
+        
+        # Status info
+        st.markdown("**📊 Status**")
+        if st.session_state.context_loaded:
+            if "❌" not in st.session_state.contexto:
+                st.markdown('<div class="status-badge status-success">✓ Connected</div>', unsafe_allow_html=True)
+            else:
+                st.markdown('<div class="status-badge status-error">✗ Error</div>', unsafe_allow_html=True)
+        
+        if st.session_state.last_sync:
+            st.caption(f"Last sync: {st.session_state.last_sync.strftime('%H:%M:%S')}")
+        
+        st.caption(f"Total messages: {st.session_state.message_count}")
+        
+        st.divider()
+        st.caption(f"Model: {DEPLOYMENT_ID}")
+        st.caption(f"Temp: 0.4 | Tokens: 1000")
+        
+        st.markdown("---")
+        st.markdown("Made with ❤️ for Spanish Year 1")
     
     # Department Link
     st.markdown("""
