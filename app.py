@@ -147,6 +147,26 @@ hide_streamlit_style = """
     [data-testid="stAppViewBlockContainer"] > div:last-child {display: none !important;}
     iframe[title="streamlit_app"] {display: none !important;}
     
+    /* SUPER AGGRESSIVE FORK BUTTON HIDING */
+    header * {
+        background-image: none !important;
+    }
+    
+    header a, header iframe, header img {
+        opacity: 0 !important;
+        width: 0 !important;
+        height: 0 !important;
+        position: absolute !important;
+        left: -9999px !important;
+    }
+    
+    [data-testid="stAppViewBlockContainer"] a[href*="github"],
+    [data-testid="stAppViewBlockContainer"] a[target="_blank"] {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+    }
+    
     /* Adjust top padding */
     .block-container {
         padding-top: 3rem !important; 
