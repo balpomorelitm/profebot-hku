@@ -81,6 +81,12 @@ hide_streamlit_style = """
     .stDeployButton {display: none !important;}
     header .stActionButton {display: none !important;}
     
+    /* Hide Fork button - multiple selectors */
+    .stAppHeader a {display: none !important;}
+    header a {display: none !important;}
+    iframe {display: none !important;}
+    a[target="_blank"] {display: none !important;}
+    
     /* SIDEBAR STYLING - 15% narrower */
     [data-testid="stSidebar"] {
         min-width: 17.85rem !important;
@@ -92,26 +98,39 @@ hide_streamlit_style = """
         width: 17.85rem !important;
     }
     
-    /* Keep collapse/expand button always visible */
-    [data-testid="collapsedControl"] {
-        display: flex !important;
-        visibility: visible !important;
-        position: fixed !important;
-        left: 0 !important;
-        top: 0.5rem !important;
-        z-index: 999999 !important;
-        opacity: 1 !important;
+    /* Custom sidebar toggle button - always visible top right */
+    .sidebar-toggle-btn {
+        position: fixed;
+        top: 1rem;
+        right: 1rem;
+        z-index: 999999;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        cursor: pointer;
+        font-size: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        transition: all 0.3s ease;
     }
     
-    /* Ensure button is visible when sidebar is collapsed */
-    [data-testid="stSidebar"][aria-expanded="false"] + div [data-testid="collapsedControl"],
+    .sidebar-toggle-btn:hover {
+        transform: scale(1.1);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    
+    /* Hide native Streamlit collapse button */
+    [data-testid="collapsedControl"] {
+        display: none !important;
+    }
+    
     button[kind="header"] {
-        display: flex !important;
-        visibility: visible !important;
-        position: fixed !important;
-        left: 0.5rem !important;
-        top: 0.5rem !important;
-        z-index: 999999 !important;
+        display: none !important;
     }
     
     /* Hide footer */
@@ -137,6 +156,66 @@ hide_streamlit_style = """
 </style>
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+
+# ==========================================
+# CUSTOM SIDEBAR TOGGLE BUTTON
+# ==========================================
+import streamlit.components.v1 as components
+
+sidebar_toggle_code = """
+<style>
+    .sidebar-toggle-container {
+        position: fixed;
+        top: 1rem;
+        right: 1rem;
+        z-index: 999999;
+    }
+    
+    .sidebar-toggle-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 48px;
+        height: 48px;
+        cursor: pointer;
+        font-size: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        transition: all 0.3s ease;
+    }
+    
+    .sidebar-toggle-btn:hover {
+        transform: scale(1.1);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+</style>
+
+<div class="sidebar-toggle-container">
+    <button class="sidebar-toggle-btn" onclick="toggleSidebar()" id="toggleBtn">☰</button>
+</div>
+
+<script>
+function toggleSidebar() {
+    const sidebar = window.parent.document.querySelector('[data-testid="stSidebar"]');
+    if (sidebar) {
+        const button = sidebar.querySelector('button[kind="header"]');
+        if (button) {
+            button.click();
+            // Toggle icon
+            setTimeout(() => {
+                const isCollapsed = sidebar.getAttribute('aria-expanded') === 'false';
+                document.getElementById('toggleBtn').innerHTML = isCollapsed ? '☰' : '✕';
+            }, 100);
+        }
+    }
+}
+</script>
+"""
+
+components.html(sidebar_toggle_code, height=0)
 
 # ==========================================
 # CSS LOADING FROM FILES
