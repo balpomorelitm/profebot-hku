@@ -86,21 +86,21 @@ hide_streamlit_style = """
         display: block !important;
         visibility: visible !important;
         transform: translateX(0) !important;
-        min-width: 21rem !important;
-        max-width: 21rem !important;
-        width: 21rem !important;
+        min-width: 17.85rem !important;
+        max-width: 17.85rem !important;
+        width: 17.85rem !important;
         position: relative !important;
     }
     
     [data-testid="stSidebar"] > div:first-child {
-        width: 21rem !important;
+        width: 17.85rem !important;
         transform: translateX(0) !important;
     }
     
     [data-testid="stSidebar"][aria-expanded="false"],
     [data-testid="stSidebar"][aria-expanded="true"] {
         transform: translateX(0) !important;
-        width: 21rem !important;
+        width: 17.85rem !important;
     }
     
     /* Hide the collapse/expand button since sidebar is always visible */
