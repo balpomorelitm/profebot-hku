@@ -127,6 +127,11 @@ hide_streamlit_style = """
         left: 4px !important;
         top: 4px !important;
         z-index: 999999 !important;
+        background: linear-gradient(135deg, #00A86B 0%, #0077C8 100%) !important;
+        border: 2px solid rgba(255,255,255,0.3) !important;
+        border-radius: 8px !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
+        padding: 8px !important;
     }
     
     button[kind="header"] {
@@ -185,6 +190,19 @@ hide_streamlit_style = """
     
     /* ===== MOBILE RESPONSIVE DESIGN ===== */
     @media (max-width: 768px) {
+        /* Make native button VERY visible on mobile */
+        [data-testid="collapsedControl"],
+        button[kind="header"] {
+            width: 50px !important;
+            height: 50px !important;
+            font-size: 24px !important;
+            background: linear-gradient(135deg, #00A86B 0%, #0077C8 100%) !important;
+            border: 3px solid rgba(255,255,255,0.4) !important;
+            border-radius: 50% !important;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.5) !important;
+            color: white !important;
+        }
+        
         /* Narrower sidebar on mobile */
         [data-testid="stSidebar"] {
             min-width: 16rem !important;
@@ -2034,75 +2052,51 @@ except Exception as e:
     st.error(f"Sidebar error: {e}")
 
 # ==========================================
-# MOBILE MENU BUTTON (FLOATING)
+# MOBILE HELPER MESSAGE
 # ==========================================
-mobile_menu_button = """
-<div id="mobileMenuBtn" onclick="toggleMobileSidebar()" style="
+mobile_helper = """
+<div id="mobileHelper" style="
     display: none;
     position: fixed;
-    left: 16px;
-    bottom: 80px;
-    width: 60px;
-    height: 60px;
-    background: linear-gradient(135deg, #00A86B 0%, #0077C8 100%);
-    border: 3px solid rgba(255,255,255,0.4);
-    border-radius: 50%;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.4);
-    cursor: pointer;
-    z-index: 99999;
-    align-items: center;
-    justify-content: center;
-    font-size: 32px;
+    top: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 168, 107, 0.95);
     color: white;
-    transition: all 0.3s ease;
-">☰</div>
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 999;
+    animation: fadeIn 0.5s ease;
+">
+    👆 Tap <strong>☰</strong> in top-left corner to open menu
+</div>
 
 <style>
     @media (max-width: 768px) {
-        #mobileMenuBtn {
-            display: flex !important;
+        #mobileHelper {
+            display: block !important;
         }
     }
     
-    #mobileMenuBtn:active {
-        transform: scale(0.9);
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translate(-50%, -20px); }
+        to { opacity: 1; transform: translate(-50%, 0); }
+    }
+    
+    /* Hide helper after 5 seconds */
+    @keyframes fadeOut {
+        to { opacity: 0; visibility: hidden; }
+    }
+    
+    #mobileHelper {
+        animation: fadeIn 0.5s ease, fadeOut 1s ease 5s forwards;
     }
 </style>
-
-<script>
-function toggleMobileSidebar() {
-    const sidebar = window.parent.document.querySelector('[data-testid="stSidebar"]');
-    const btn = document.getElementById('mobileMenuBtn');
-    
-    if (!sidebar) return;
-    
-    const isExpanded = sidebar.getAttribute('aria-expanded') === 'true';
-    
-    if (isExpanded) {
-        sidebar.setAttribute('aria-expanded', 'false');
-        if (btn) btn.innerHTML = '☰';
-    } else {
-        sidebar.setAttribute('aria-expanded', 'true');
-        if (btn) btn.innerHTML = '✕';
-    }
-}
-
-// Initialize button
-setTimeout(() => {
-    const sidebar = window.parent.document.querySelector('[data-testid="stSidebar"]');
-    const btn = document.getElementById('mobileMenuBtn');
-    if (sidebar && btn) {
-        const isExpanded = sidebar.getAttribute('aria-expanded');
-        if (!isExpanded) {
-            sidebar.setAttribute('aria-expanded', 'false');
-        }
-        btn.innerHTML = isExpanded === 'true' ? '✕' : '☰';
-    }
-}, 500);
-</script>
 """
 
-st.markdown(mobile_menu_button, unsafe_allow_html=True)
+st.markdown(mobile_helper, unsafe_allow_html=True)
 
 # ==========================================
 # FLOATING MESSAGE HISTORY PANEL
