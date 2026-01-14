@@ -201,15 +201,31 @@ hide_streamlit_style = """
             transform: translateX(-100%) !important;
         }
         
-        /* Make toggle button more prominent on mobile */
+        /* CRITICAL: Keep toggle button visible ALWAYS on mobile */
         [data-testid="collapsedControl"],
         button[kind="header"] {
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            position: fixed !important;
+            left: 8px !important;
+            top: 8px !important;
+            z-index: 999999 !important;
             width: 48px !important;
             height: 48px !important;
             font-size: 24px !important;
-            background: rgba(0, 168, 107, 0.9) !important;
-            border-radius: 0 8px 8px 0 !important;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
+            background: linear-gradient(135deg, #00A86B 0%, #0077C8 100%) !important;
+            border-radius: 12px !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4) !important;
+            border: 2px solid rgba(255,255,255,0.2) !important;
+        }
+        
+        /* Ensure button visible when sidebar collapsed */
+        [data-testid="stSidebar"][aria-expanded="false"] ~ * [data-testid="collapsedControl"],
+        [data-testid="stSidebar"][aria-expanded="false"] ~ * button[kind="header"] {
+            display: flex !important;
+            visibility: visible !important;
+            left: 8px !important;
         }
         
         /* Adjust main content area on mobile */
