@@ -1568,15 +1568,10 @@ def get_user_messages_with_time():
 # LOAD NOTION CONTENT ON FIRST RUN
 # ==========================================
 if not st.session_state.context_loaded:
-    with st.spinner('🔄 Syncing with course database...'):
-        st.session_state.contexto = get_weekly_content()
-        st.session_state.context_loaded = True
-        st.session_state.last_sync = datetime.now()
-        
-        if "❌" not in st.session_state.contexto:
-            st.success("✅ Course content loaded successfully!")
-        else:
-            st.error("⚠️ Error loading course content. Some features may be limited.")
+    st.session_state.contexto = get_weekly_content()
+    st.session_state.context_loaded = True
+    st.session_state.last_sync = datetime.now()
+
 
 # ==========================================
 # CORE PROCESSING FUNCTION
