@@ -92,6 +92,28 @@ hide_streamlit_style = """
         width: 17.85rem !important;
     }
     
+    /* Keep collapse/expand button always visible */
+    [data-testid="collapsedControl"] {
+        display: flex !important;
+        visibility: visible !important;
+        position: fixed !important;
+        left: 0 !important;
+        top: 0.5rem !important;
+        z-index: 999999 !important;
+        opacity: 1 !important;
+    }
+    
+    /* Ensure button is visible when sidebar is collapsed */
+    [data-testid="stSidebar"][aria-expanded="false"] + div [data-testid="collapsedControl"],
+    button[kind="header"] {
+        display: flex !important;
+        visibility: visible !important;
+        position: fixed !important;
+        left: 0.5rem !important;
+        top: 0.5rem !important;
+        z-index: 999999 !important;
+    }
+    
     /* Hide footer */
     footer {visibility: hidden;}
     
