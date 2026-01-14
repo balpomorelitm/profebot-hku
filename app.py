@@ -1657,10 +1657,10 @@ def process_user_input(user_text: str, quick_action: str = None):
 # SIDEBAR
 # ==========================================
 with st.sidebar:
-    st.markdown('<p class="sidebar-title">🎓 <span class="sidebar-title-text">ProfeBot Control</span></p>', unsafe_allow_html=True)
+    st.markdown("### 🎓 ProfeBot Control")
     
-    # Thread History
-    st.subheader("💬 Conversations")
+    # ===== CONVERSATIONS =====
+    st.markdown("#### 💬 Conversations")
     
     for thread_id, thread_data in sorted(
         st.session_state.threads.items(), 
@@ -1669,12 +1669,12 @@ with st.sidebar:
     ):
         is_active = thread_id == st.session_state.current_thread_id
         
-        col_btn, col_del = st.columns([4, 1])
+        col1, col2 = st.columns([4, 1])
         
-        with col_btn:
+        with col1:
             if st.button(
-                f"{'📌 ' if is_active else '💭 '}{thread_data['title'][:20]}",
-                key=f"thread_btn_{thread_id}",
+                f"{'📌' if is_active else '💭'} {thread_data['title'][:20]}",
+                key=f"thread_{thread_id}",
                 use_container_width=True,
                 type="primary" if is_active else "secondary"
             ):
@@ -1682,27 +1682,27 @@ with st.sidebar:
                     switch_thread(thread_id)
                     st.rerun()
         
-        with col_del:
+        with col2:
             if len(st.session_state.threads) > 1:
-                if st.button("🗑️", key=f"del_{thread_id}", help="Delete"):
+                if st.button("🗑️", key=f"del_{thread_id}"):
                     delete_thread(thread_id)
                     st.rerun()
     
     st.caption(f"{len(st.session_state.threads)} conversation(s)")
-    
     st.divider()
     
-    # Actions
-    st.subheader("🔧 Actions")
+    # ===== ACTIONS =====
+    st.markdown("#### 🔧 Actions")
     
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("➕ New", use_container_width=True):
+    col_a, col_b = st.columns(2)
+    
+    with col_a:
+        if st.button("➕ New", use_container_width=True, key="btn_new"):
             create_new_thread()
             st.rerun()
     
-    with col2:
-        if st.button("🗑️ Clear Chat", use_container_width=True):
+    with col_b:
+        if st.button("🗑️ Clear", use_container_width=True, key="btn_clear"):
             current_thread = get_current_thread()
             current_thread["messages"] = [{
                 "role": "assistant", 
@@ -1710,184 +1710,122 @@ with st.sidebar:
             }]
             current_thread["suggestions"] = []
             st.session_state.selected_message_index = None
-            save_threads_to_file()  # Persist cleared chat
+            save_threads_to_file()
             st.rerun()
     
     st.divider()
     
-    # Settings (as expander)
-    with st.expander("⚙️ Settings", expanded=False):
-        # Language
+    # ===== SETTINGS =====
+    with st.expander("⚙️ Settings"):
         st.markdown("**🌐 Language**")
-        
         selected_lang = st.selectbox(
-            "Explanation Language",
+            "Select language",
             options=list(LANGUAGE_OPTIONS.keys()),
             index=0,
-            key="lang_selector",
+            key="lang_sel",
             label_visibility="collapsed"
         )
-        
         st.session_state.preferred_language = LANGUAGE_OPTIONS[selected_lang]
         
         if st.session_state.preferred_language == "custom":
-            custom_lang_input = st.text_input(
+            custom_lang = st.text_input(
                 "Your language:",
                 value=st.session_state.custom_language,
                 placeholder="Français, Deutsch, 日本語",
-                key="custom_lang_input"
+                key="custom_lang"
             )
-            st.session_state.custom_language = custom_lang_input
+            st.session_state.custom_language = custom_lang
         
         st.divider()
         
-        # Night Mode Toggle
         st.markdown("**🌙 Appearance**")
-        dark_mode_label = "Switch to Day Mode" if st.session_state.dark_mode else "Switch to Night Mode"
-        if st.button(dark_mode_label, use_container_width=True, key="dark_mode_toggle"):
+        mode_label = "☀️ Day Mode" if st.session_state.dark_mode else "🌙 Night Mode"
+        if st.button(mode_label, use_container_width=True, key="btn_dark"):
             st.session_state.dark_mode = not st.session_state.dark_mode
-            save_threads_to_file()  # Persist preference
+            save_threads_to_file()
             st.rerun()
     
-    st.divider()
-    
-    # Export Conversations
-    with st.expander("📥 Export Chat", expanded=False):
-        st.markdown("**Download conversation**")
+    # ===== EXPORT =====
+    with st.expander("📥 Export Chat"):
         current_thread = get_current_thread()
         
-        # Export as TXT
         txt_content = export_conversation_txt(current_thread["messages"])
         st.download_button(
-            label="📄 Download TXT",
-            data=txt_content,
-            file_name=f"profebot_chat_{datetime.now().strftime('%Y%m%d_%H%M')}.txt",
-            mime="text/plain",
+            "📄 TXT",
+            txt_content,
+            f"chat_{datetime.now().strftime('%Y%m%d_%H%M')}.txt",
+            "text/plain",
             use_container_width=True
         )
         
-        # Export as Markdown
         md_content = export_conversation_md(current_thread["messages"])
         st.download_button(
-            label="📝 Download Markdown",
-            data=md_content,
-            file_name=f"profebot_chat_{datetime.now().strftime('%Y%m%d_%H%M')}.md",
-            mime="text/markdown",
+            "📝 Markdown",
+            md_content,
+            f"chat_{datetime.now().strftime('%Y%m%d_%H%M')}.md",
+            "text/markdown",
             use_container_width=True
         )
         
-        # Export as Word (DOCX)
         if DOCX_AVAILABLE:
             docx_buffer = export_conversation_docx(current_thread["messages"])
             if docx_buffer:
                 st.download_button(
-                    label="📘 Download Word",
-                    data=docx_buffer,
-                    file_name=f"profebot_chat_{datetime.now().strftime('%Y%m%d_%H%M')}.docx",
-                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    "📘 Word",
+                    docx_buffer,
+                    f"chat_{datetime.now().strftime('%Y%m%d_%H%M')}.docx",
+                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                     use_container_width=True
                 )
-        else:
-            st.caption("⚠️ Install python-docx to enable Word export")
     
-    # My Learning Progress
-    with st.expander("📈 My Progress", expanded=False):
+    # ===== PROGRESS =====
+    with st.expander("📈 My Progress"):
         profile = load_user_profile()
         
-        # Learning streak
         streak = profile.get("learning_streak", 0)
         if streak > 0:
-            if streak >= 7:
-                st.markdown(f"### 🔥 {streak} day streak! Amazing!")
-            else:
-                st.markdown(f"### 🔥 {streak} day streak!")
+            st.markdown(f"### 🔥 {streak} day streak!")
         else:
-            st.markdown("### Start your streak today! 🚀")
+            st.markdown("### Start your streak! 🚀")
         
-        # Total interactions
         total = profile.get("total_interactions", 0)
-        st.caption(f"Total questions asked: {total}")
+        st.caption(f"Total questions: {total}")
         
-        # Quiz performance
         scores = profile.get("quiz_scores", [])
         if scores:
-            recent_scores = scores[-10:]
-            avg_score = sum(s["percentage"] for s in recent_scores) / len(recent_scores)
-            st.markdown("**📝 Quiz Performance**")
-            st.progress(avg_score / 100)
-            st.caption(f"Average: {avg_score:.0f}% ({len(scores)} quizzes)")
-            
-            # Best score
-            best = max(scores, key=lambda x: x["percentage"])
-            st.caption(f"Best score: {best['percentage']:.0f}%")
-        
-        # Weak areas to review
-        grammar_errors = profile.get("grammar_errors", {})
-        if grammar_errors:
-            st.markdown("**📚 Areas to Review**")
-            sorted_errors = sorted(grammar_errors.items(), key=lambda x: x[1], reverse=True)[:3]
-            for area, count in sorted_errors:
-                area_display = area.replace("_", "/").title()
-                st.caption(f"• {area_display} ({count} corrections)")
-        
-        # Favorite topics
-        fav_topics = profile.get("favorite_topics", {})
-        if fav_topics:
-            st.markdown("**💡 Your Interests**")
-            sorted_topics = sorted(fav_topics.items(), key=lambda x: x[1], reverse=True)[:3]
-            for topic, count in sorted_topics:
-                st.caption(f"• {topic.title()}: {count} questions")
-        
-        # Encouragement message
-        if scores and avg_score >= 80:
-            st.success("🌟 ¡Excelente! You're doing great!")
-        elif streak >= 3:
-            st.info("💪 Keep up the momentum!")
+            recent = scores[-10:]
+            avg = sum(s["percentage"] for s in recent) / len(recent)
+            st.markdown("**📝 Quiz Average**")
+            st.progress(avg / 100)
+            st.caption(f"{avg:.0f}% ({len(scores)} quizzes)")
     
-    # About (with status info)
+    # ===== ABOUT =====
     with st.expander("ℹ️ About"):
         st.markdown("""
         **ProfeBot** - AI Spanish Tutor
         
-        **Features:**
         - 📚 Context-aware
-        - 🎯 Personalized exercises
+        - 🎯 Personalized
         - 💬 Interactive
         - 🌐 Multilingual
-        
-        **Hybrid AI System:**
-        - 🚀 DeepSeek-V3 (Fast)
-        - 🧠 GPT-4.1 (Complex)
-        
-        ---
         """)
         
-        # Status info
-        st.markdown("**📊 Status**")
+        st.divider()
+        
         if st.session_state.context_loaded:
             if "❌" not in st.session_state.contexto:
-                st.markdown('<div class="status-badge status-success">✓ Connected</div>', unsafe_allow_html=True)
+                st.success("✓ Connected")
             else:
-                st.markdown('<div class="status-badge status-error">✗ Error</div>', unsafe_allow_html=True)
+                st.error("✗ Error")
         
         if st.session_state.last_sync:
             st.caption(f"Last sync: {st.session_state.last_sync.strftime('%H:%M:%S')}")
         
-        st.caption(f"Total messages: {st.session_state.message_count}")
-        
-        st.divider()
+        st.caption(f"Messages: {st.session_state.message_count}")
         st.caption(f"Model: {DEPLOYMENT_ID}")
-        st.caption(f"Temp: 0.4 | Tokens: 1000")
-        
-        st.markdown("---")
-        st.markdown("Made with ❤️ for Spanish Year 1")
     
-    # Department Link
-    st.markdown("""
-    <div class="dept-link">
-        <a href="https://spanish.hku.hk/" target="_blank">🏛️ HKU Spanish Department</a>
-    </div>
-    """, unsafe_allow_html=True)
+    st.divider()
+    st.markdown("[🏛️ HKU Spanish Dept](https://spanish.hku.hk/)", unsafe_allow_html=True)
 
 # ==========================================
 # FLOATING MESSAGE HISTORY PANEL
