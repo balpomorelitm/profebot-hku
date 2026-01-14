@@ -314,6 +314,90 @@ setInterval(removeForkButton, 500);
 components.html(remove_fork_script, height=0)
 
 # ==========================================
+# MOBILE SIDEBAR TOGGLE BUTTON (ALWAYS VISIBLE)
+# ==========================================
+mobile_toggle_button = """
+<style>
+    .mobile-sidebar-toggle {
+        display: none;
+        position: fixed;
+        left: 12px;
+        top: 12px;
+        z-index: 9999999;
+        width: 52px;
+        height: 52px;
+        background: linear-gradient(135deg, #00A86B 0%, #0077C8 100%);
+        border: none;
+        border-radius: 50%;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 26px;
+        color: white;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .mobile-sidebar-toggle:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+    }
+    
+    .mobile-sidebar-toggle:active {
+        transform: scale(0.95);
+    }
+    
+    @media (max-width: 768px) {
+        .mobile-sidebar-toggle {
+            display: flex !important;
+        }
+    }
+</style>
+
+<button class="mobile-sidebar-toggle" onclick="toggleMobileSidebar()" id="mobileToggle">
+    ☰
+</button>
+
+<script>
+function toggleMobileSidebar() {
+    const sidebar = window.parent.document.querySelector('[data-testid="stSidebar"]');
+    if (sidebar) {
+        const isExpanded = sidebar.getAttribute('aria-expanded') === 'true';
+        
+        // Find the native toggle button and click it
+        const nativeButton = sidebar.querySelector('button[kind="header"]');
+        if (nativeButton) {
+            nativeButton.click();
+        }
+        
+        // Update our custom button icon
+        const btn = document.getElementById('mobileToggle');
+        if (btn) {
+            setTimeout(() => {
+                const newState = sidebar.getAttribute('aria-expanded') === 'true';
+                btn.innerHTML = newState ? '✕' : '☰';
+            }, 100);
+        }
+    }
+}
+
+// Update button icon on load
+window.addEventListener('load', function() {
+    setTimeout(function() {
+        const sidebar = window.parent.document.querySelector('[data-testid="stSidebar"]');
+        const btn = document.getElementById('mobileToggle');
+        if (sidebar && btn) {
+            const isExpanded = sidebar.getAttribute('aria-expanded') === 'true';
+            btn.innerHTML = isExpanded ? '✕' : '☰';
+        }
+    }, 200);
+});
+</script>
+"""
+
+components.html(mobile_toggle_button, height=0)
+
+# ==========================================
 # CSS LOADING FROM FILES
 # ==========================================
 def load_css_from_file(dark_mode: bool = False) -> str:
