@@ -1659,6 +1659,9 @@ def process_user_input(user_text: str, quick_action: str = None):
 with st.sidebar:
     st.markdown('<p class="sidebar-title">🎓 <span class="sidebar-title-text">ProfeBot Control</span></p>', unsafe_allow_html=True)
     
+    # Debug - esto debería aparecer
+    st.write("DEBUG: Sidebar loaded")
+    
     # Thread History
     st.subheader("💬 Conversations")
     
