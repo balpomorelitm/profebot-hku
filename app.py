@@ -182,6 +182,74 @@ hide_streamlit_style = """
     .block-container {
         padding-top: 3rem !important; 
     }
+    
+    /* ===== MOBILE RESPONSIVE DESIGN ===== */
+    @media (max-width: 768px) {
+        /* Narrower sidebar on mobile */
+        [data-testid="stSidebar"] {
+            min-width: 16rem !important;
+            max-width: 16rem !important;
+            width: 16rem !important;
+        }
+        
+        [data-testid="stSidebar"] > div:first-child {
+            width: 16rem !important;
+        }
+        
+        /* Collapse sidebar by default on mobile */
+        [data-testid="stSidebar"][aria-expanded="false"] {
+            transform: translateX(-100%) !important;
+        }
+        
+        /* Make toggle button more prominent on mobile */
+        [data-testid="collapsedControl"],
+        button[kind="header"] {
+            width: 48px !important;
+            height: 48px !important;
+            font-size: 24px !important;
+            background: rgba(0, 168, 107, 0.9) !important;
+            border-radius: 0 8px 8px 0 !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
+        }
+        
+        /* Adjust main content area on mobile */
+        .block-container {
+            padding: 1rem !important;
+            max-width: 100% !important;
+        }
+        
+        /* Stack Quick Action buttons vertically on mobile */
+        [data-testid="column"] {
+            min-width: 100% !important;
+        }
+    }
+    
+    /* For very small screens (phones) */
+    @media (max-width: 480px) {
+        [data-testid="stSidebar"] {
+            min-width: 14rem !important;
+            max-width: 14rem !important;
+            width: 14rem !important;
+        }
+        
+        [data-testid="stSidebar"] > div:first-child {
+            width: 14rem !important;
+            padding: 0.5rem !important;
+        }
+        
+        /* Smaller text in sidebar on very small screens */
+        [data-testid="stSidebar"] {
+            font-size: 0.85rem !important;
+        }
+        
+        [data-testid="stSidebar"] h3 {
+            font-size: 1rem !important;
+        }
+        
+        [data-testid="stSidebar"] h4 {
+            font-size: 0.9rem !important;
+        }
+    }
 </style>
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
