@@ -190,71 +190,21 @@ hide_streamlit_style = """
     
     /* ===== MOBILE RESPONSIVE DESIGN ===== */
     @media (max-width: 768px) {
-        /* Make native button VERY visible on mobile */
+        /* HIDE sidebar completely on mobile */
+        [data-testid="stSidebar"],
         [data-testid="collapsedControl"],
         button[kind="header"] {
-            width: 50px !important;
-            height: 50px !important;
-            font-size: 24px !important;
-            background: linear-gradient(135deg, #00A86B 0%, #0077C8 100%) !important;
-            border: 3px solid rgba(255,255,255,0.4) !important;
-            border-radius: 50% !important;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.5) !important;
-            color: white !important;
+            display: none !important;
         }
         
-        /* Narrower sidebar on mobile */
-        [data-testid="stSidebar"] {
-            min-width: 16rem !important;
-            max-width: 16rem !important;
-            width: 16rem !important;
+        /* Full width content on mobile */
+        [data-testid="stAppViewContainer"] {
+            margin-left: 0 !important;
         }
         
-        [data-testid="stSidebar"] > div:first-child {
-            width: 16rem !important;
-        }
-        
-        /* Collapse sidebar by default on mobile */
-        [data-testid="stSidebar"][aria-expanded="false"] {
-            transform: translateX(-100%) !important;
-        }
-        
-        /* CRITICAL: Keep toggle button visible ALWAYS on mobile */
-        [data-testid="collapsedControl"],
-        button[kind="header"] {
-            display: flex !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-            position: fixed !important;
-            left: 8px !important;
-            top: 8px !important;
-            z-index: 999999 !important;
-            width: 48px !important;
-            height: 48px !important;
-            font-size: 24px !important;
-            background: linear-gradient(135deg, #00A86B 0%, #0077C8 100%) !important;
-            border-radius: 12px !important;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.4) !important;
-            border: 2px solid rgba(255,255,255,0.2) !important;
-        }
-        
-        /* Ensure button visible when sidebar collapsed */
-        [data-testid="stSidebar"][aria-expanded="false"] ~ * [data-testid="collapsedControl"],
-        [data-testid="stSidebar"][aria-expanded="false"] ~ * button[kind="header"] {
-            display: flex !important;
-            visibility: visible !important;
-            left: 8px !important;
-        }
-        
-        /* Adjust main content area on mobile */
         .block-container {
             padding: 1rem !important;
             max-width: 100% !important;
-        }
-        
-        /* Stack Quick Action buttons vertically on mobile */
-        [data-testid="column"] {
-            min-width: 100% !important;
         }
     }
     
@@ -2052,53 +2002,6 @@ except Exception as e:
     st.error(f"Sidebar error: {e}")
 
 # ==========================================
-# MOBILE HELPER MESSAGE
-# ==========================================
-mobile_helper = """
-<div id="mobileHelper" style="
-    display: none;
-    position: fixed;
-    top: 70px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0, 168, 107, 0.95);
-    color: white;
-    padding: 8px 16px;
-    border-radius: 20px;
-    font-size: 14px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    z-index: 999;
-    animation: fadeIn 0.5s ease;
-">
-    👆 Tap <strong>☰</strong> in top-left corner to open menu
-</div>
-
-<style>
-    @media (max-width: 768px) {
-        #mobileHelper {
-            display: block !important;
-        }
-    }
-    
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translate(-50%, -20px); }
-        to { opacity: 1; transform: translate(-50%, 0); }
-    }
-    
-    /* Hide helper after 5 seconds */
-    @keyframes fadeOut {
-        to { opacity: 0; visibility: hidden; }
-    }
-    
-    #mobileHelper {
-        animation: fadeIn 0.5s ease, fadeOut 1s ease 5s forwards;
-    }
-</style>
-"""
-
-st.markdown(mobile_helper, unsafe_allow_html=True)
-
-# ==========================================
 # FLOATING MESSAGE HISTORY PANEL
 # ==========================================
 user_messages = get_user_messages_with_time()
@@ -2394,6 +2297,73 @@ def check_for_quiz_in_last_response() -> Optional[Dict]:
 # ==========================================
 # MAIN CHAT INTERFACE
 # ==========================================
+# Mobile menu - show sidebar content in expander on mobile
+mobile_menu_html = """
+<style>
+    .mobile-menu-container {
+        display: none;
+    }
+    
+    @media (max-width: 768px) {
+        .mobile-menu-container {
+            display: block !important;
+        }
+    }
+</style>
+"""
+st.markdown(mobile_menu_html, unsafe_allow_html=True)
+
+# Mobile menu expander (only visible on mobile via CSS)
+with st.container():
+    st.markdown('<div class="mobile-menu-container">', unsafe_allow_html=True)
+    with st.expander("📱 Menu", expanded=False):
+        st.markdown("#### 💬 Conversations")
+        for thread_id, thread_data in sorted(
+            st.session_state.threads.items(), 
+            key=lambda x: x[1]["created_at"], 
+            reverse=True
+        )[:5]:  # Show only 5 most recent on mobile
+            is_active = thread_id == st.session_state.current_thread_id
+            if st.button(
+                f"{'📌' if is_active else '💭'} {thread_data['title'][:25]}",
+                key=f"mobile_thread_{thread_id}",
+                use_container_width=True,
+                type="primary" if is_active else "secondary"
+            ):
+                if thread_id != st.session_state.current_thread_id:
+                    switch_thread(thread_id)
+                    st.rerun()
+        
+        st.divider()
+        
+        if st.button("➕ New Conversation", use_container_width=True, key="mobile_btn_new"):
+            create_new_thread()
+            st.rerun()
+        
+        st.divider()
+        st.markdown("**🌐 Language**")
+        selected_lang = st.selectbox(
+            "Language",
+            options=list(LANGUAGE_OPTIONS.keys()),
+            index=0,
+            key="mobile_lang_sel",
+            label_visibility="collapsed"
+        )
+        st.session_state.preferred_language = LANGUAGE_OPTIONS[selected_lang]
+        
+        st.divider()
+        mode_label = "☀️ Day Mode" if st.session_state.dark_mode else "🌙 Night Mode"
+        if st.button(mode_label, use_container_width=True, key="mobile_btn_dark"):
+            st.session_state.dark_mode = not st.session_state.dark_mode
+            save_threads_to_file()
+            components.html("""
+            <script>
+                window.parent.location.reload();
+            </script>
+            """, height=0)
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+
 # Get current thread
 current_thread = get_current_thread()
 
