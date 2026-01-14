@@ -188,8 +188,19 @@ hide_streamlit_style = """
         padding-top: 3rem !important; 
     }
     
+    /* ===== MOBILE MENU VISIBILITY ===== */
+    /* Hide mobile menu expander on desktop - target the container with mobile-menu key */
+    [data-testid="stVerticalBlock"] > [data-testid="stVerticalBlock"]:first-child > [data-testid="stExpander"]:first-of-type {
+        display: none !important;
+    }
+    
     /* ===== MOBILE RESPONSIVE DESIGN ===== */
     @media (max-width: 768px) {
+        /* SHOW mobile menu on mobile */
+        [data-testid="stVerticalBlock"] > [data-testid="stVerticalBlock"]:first-child > [data-testid="stExpander"]:first-of-type {
+            display: block !important;
+        }
+        
         /* HIDE sidebar completely on mobile */
         [data-testid="stSidebar"],
         [data-testid="collapsedControl"],
@@ -2297,36 +2308,9 @@ def check_for_quiz_in_last_response() -> Optional[Dict]:
 # ==========================================
 # MAIN CHAT INTERFACE
 # ==========================================
-# Mobile menu - show sidebar content in expander on mobile
-mobile_menu_html = """
-<style>
-    .mobile-menu-container {
-        display: none !important;
-    }
-    
-    @media (max-width: 768px) {
-        .mobile-menu-container {
-            display: block !important;
-        }
-    }
-    
-    @media (min-width: 769px) {
-        .mobile-menu-container {
-            display: none !important;
-            visibility: hidden !important;
-            height: 0 !important;
-            overflow: hidden !important;
-        }
-    }
-</style>
-"""
-st.markdown(mobile_menu_html, unsafe_allow_html=True)
-
-# Mobile menu expander (only visible on mobile via CSS)
-with st.container():
-    st.markdown('<div class="mobile-menu-container">', unsafe_allow_html=True)
-    with st.expander("📱 Menu", expanded=False):
-        st.markdown("#### 💬 Conversations")
+# Mobile menu expander (CSS in hide_streamlit_style hides this on desktop)
+with st.expander("📱 Menu", expanded=False):
+    st.markdown("#### 💬 Conversations")
         for thread_id, thread_data in sorted(
             st.session_state.threads.items(), 
             key=lambda x: x[1]["created_at"], 
@@ -2370,8 +2354,6 @@ with st.container():
                 window.parent.location.reload();
             </script>
             """, height=0)
-    
-    st.markdown('</div>', unsafe_allow_html=True)
 
 # Get current thread
 current_thread = get_current_thread()
