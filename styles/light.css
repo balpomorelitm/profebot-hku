@@ -85,11 +85,29 @@
 
 /* ===== HEADER / TOP BAR ===== */
 header, [data-testid="stHeader"] {
-    background-color: var(--header-bg) !important;
+    background-color: #ffffff !important;
+    background: #ffffff !important;
     border-bottom: 1px solid var(--border-color) !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
     opacity: 1 !important;
+}
+
+/* Force header to be fully opaque */
+[data-testid="stHeader"] > div,
+[data-testid="stHeader"] * {
+    background-color: transparent !important;
+}
+
+[data-testid="stHeader"]::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #ffffff !important;
+    z-index: -1;
 }
 
 /* Fixed header title in Streamlit header bar */
