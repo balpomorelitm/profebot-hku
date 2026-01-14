@@ -87,6 +87,9 @@
 header, [data-testid="stHeader"] {
     background-color: var(--header-bg) !important;
     border-bottom: 1px solid var(--border-color) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    opacity: 1 !important;
 }
 
 /* Fixed header title in Streamlit header bar */
@@ -105,6 +108,7 @@ header, [data-testid="stHeader"] {
     background-clip: text;
     z-index: 1000;
     white-space: nowrap;
+    padding: 0 20px;
 }
 
 /* History item clickable */
