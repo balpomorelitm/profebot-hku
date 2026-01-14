@@ -1,0 +1,616 @@
+/* ===== LIGHT MODE STYLES ===== */
+/* ProfeBot - Spanish Year 1 Tutor */
+
+/* Google Font Import */
+@import url('https://fonts.googleapis.com/css2?family=WDXL+Lubrifont+TC&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* CSS Variables for Light Mode - HKU Official Colors */
+:root {
+    /* HKU Color Palette */
+    --hku-green-dark: #0e4236;
+    --hku-green-light: #00A86B;
+    --hku-blue: #0077C8;
+    --hku-yellow: #FFD100;
+    --hku-brown: #3D2B1F;
+    
+    --bg-color: #ffffff;
+    --secondary-bg: #f6f8fa;
+    --text-color: #24292f;
+    --text-secondary: #57606a;
+    --panel-bg: rgba(255, 255, 255, 0.92);
+    --panel-border: rgba(14, 66, 54, 0.3);
+    --item-bg: rgba(246, 248, 250, 0.9);
+    --item-hover: rgba(14, 66, 54, 0.1);
+    --title-border: #0e4236;
+    --accent-color: #0e4236;
+    --accent-secondary: #0077C8;
+    --accent-gradient: linear-gradient(135deg, #0e4236 0%, #00A86B 100%);
+    --sidebar-bg: #f6f8fa;
+    --header-bg: #ffffff;
+    --input-bg: #f6f8fa;
+    --border-color: #d0d7de;
+}
+
+/* ===== SIDEBAR COMPLETE STYLING ===== */
+[data-testid="stSidebar"] {
+    background-color: var(--sidebar-bg) !important;
+    border-right: 1px solid var(--border-color) !important;
+}
+
+[data-testid="stSidebar"] > div:first-child {
+    background-color: var(--sidebar-bg) !important;
+    padding-top: 0.5rem !important;
+}
+
+[data-testid="stSidebar"] .block-container {
+    padding: 0.5rem 1rem !important;
+}
+
+[data-testid="stSidebar"] [data-testid="stVerticalBlock"] > div {
+    margin-bottom: 0.3rem !important;
+}
+
+[data-testid="stSidebar"] hr {
+    margin: 0.5rem 0 !important;
+}
+
+[data-testid="stSidebar"] * {
+    color: var(--text-color) !important;
+}
+
+/* Sidebar title with green text */
+.sidebar-title {
+    font-size: 1.3rem !important;
+    font-weight: 700 !important;
+    margin-bottom: 0.5rem !important;
+}
+
+.sidebar-title-text {
+    color: var(--accent-color) !important;
+}
+
+[data-testid="stSidebar"] .stMarkdown p,
+[data-testid="stSidebar"] .stMarkdown span,
+[data-testid="stSidebar"] label,
+[data-testid="stSidebar"] .stCaption {
+    color: var(--text-secondary) !important;
+}
+
+[data-testid="stSidebar"] h1,
+[data-testid="stSidebar"] h2,
+[data-testid="stSidebar"] h3 {
+    color: var(--text-color) !important;
+}
+
+/* ===== HEADER / TOP BAR ===== */
+header, [data-testid="stHeader"] {
+    background-color: var(--header-bg) !important;
+    border-bottom: 1px solid var(--border-color) !important;
+}
+
+/* Fixed header title in Streamlit header bar */
+[data-testid="stHeader"]::before {
+    content: 'ProfeBot: Spanish Year 1 Interactive Tutor';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'WDXL Lubrifont TC', sans-serif !important;
+    font-size: 1.2rem !important;
+    font-weight: 700 !important;
+    background: var(--accent-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    z-index: 1000;
+    white-space: nowrap;
+}
+
+/* History item clickable */
+.history-item {
+    padding: 12px;
+    margin: 8px 0;
+    background: var(--item-bg);
+    border-left: 3px solid var(--accent-color);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.85rem;
+}
+
+.history-item:hover {
+    background: var(--item-hover);
+    transform: translateX(-3px);
+    box-shadow: 0 4px 12px rgba(14,66,54,0.2);
+    border-left-color: #00A86B;
+}
+
+.history-item:active {
+    transform: translateX(-5px) scale(0.98);
+}
+
+/* ===== MAIN CONTENT AREA ===== */
+.main, [data-testid="stMain"] {
+    background-color: var(--bg-color) !important;
+}
+
+.main .block-container {
+    padding-right: 320px;
+    padding-top: 1rem;
+    max-width: calc(100% - 300px);
+    margin-right: 20px;
+    background-color: var(--bg-color) !important;
+}
+
+/* All text in main area */
+.main p, .main span, .main div {
+    color: var(--text-color) !important;
+}
+
+.main .stCaption, .main small {
+    color: var(--text-secondary) !important;
+}
+
+/* ===== CUSTOM TITLE STYLING ===== */
+.custom-title {
+    font-family: 'WDXL Lubrifont TC', sans-serif !important;
+    font-size: 2.5rem !important;
+    font-weight: 700 !important;
+    background: var(--accent-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.5rem !important;
+}
+
+.custom-subtitle {
+    color: var(--text-secondary) !important;
+    font-size: 1rem;
+    margin-top: -10px;
+}
+
+/* ===== FLOATING MESSAGE HISTORY PANEL ===== */
+.message-history-panel {
+    position: fixed;
+    right: 20px;
+    top: 80px;
+    width: 280px;
+    max-height: calc(100vh - 120px);
+    min-height: 80px;
+    height: auto;
+    background: var(--panel-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--panel-border);
+    border-radius: 16px;
+    padding: 15px;
+    overflow-y: auto;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+    z-index: 999;
+    transition: all 0.3s ease;
+}
+
+.message-history-panel::-webkit-scrollbar {
+    width: 6px;
+}
+
+.message-history-panel::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 10px;
+}
+
+.message-history-panel::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 10px;
+}
+
+.message-history-panel::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-color);
+}
+
+.history-item-time {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+
+.history-item-text {
+    color: var(--text-color);
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.history-panel-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--title-border);
+    color: var(--text-color);
+}
+
+.history-count {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-weight: normal;
+}
+
+/* ===== CHAT MESSAGES ===== */
+.stChatMessage {
+    padding: 1rem;
+    border-radius: 12px;
+    margin-bottom: 0.5rem;
+    scroll-margin-top: 100px;
+    background-color: var(--secondary-bg) !important;
+    border: none;
+}
+
+.stChatMessage p, .stChatMessage span, .stChatMessage div,
+.stChatMessage li, .stChatMessage strong, .stChatMessage em {
+    color: var(--text-color) !important;
+}
+
+/* Force all markdown text in chat to be visible */
+[data-testid="stChatMessage"] * {
+    color: var(--text-color) !important;
+}
+
+[data-testid="stChatMessage"] code {
+    background-color: var(--input-bg) !important;
+    color: var(--accent-color) !important;
+}
+
+/* ===== INPUT FIELDS ===== */
+.stTextInput input, [data-testid="stChatInput"] textarea {
+    background-color: var(--input-bg) !important;
+    color: var(--text-color) !important;
+    border: none !important;
+    border-radius: 20px !important;
+}
+
+/* Chat input container/wrapper */
+[data-testid="stChatInput"] {
+    background-color: var(--bg-color) !important;
+    border-color: var(--border-color) !important;
+}
+
+[data-testid="stChatInput"] > div {
+    background-color: var(--input-bg) !important;
+    border-color: var(--border-color) !important;
+}
+
+/* Bottom chat input area */
+[data-testid="stBottom"] {
+    background-color: var(--bg-color) !important;
+}
+
+[data-testid="stBottom"] > div {
+    background-color: var(--bg-color) !important;
+}
+
+.stChatInputContainer {
+    background-color: var(--bg-color) !important;
+}
+
+/* ===== SELECTBOX STYLING ===== */
+.stSelectbox > div > div {
+    background-color: var(--input-bg) !important;
+    color: var(--text-color) !important;
+    border: none !important;
+    border-radius: 12px !important;
+}
+
+.stSelectbox [data-baseweb="select"] {
+    background-color: var(--input-bg) !important;
+}
+
+.stSelectbox [data-baseweb="select"] > div {
+    background-color: var(--input-bg) !important;
+    color: var(--text-color) !important;
+    border: none !important;
+}
+
+.stSelectbox [data-baseweb="select"] span {
+    color: var(--text-color) !important;
+}
+
+/* Dropdown menu */
+[data-baseweb="popover"] {
+    background-color: var(--secondary-bg) !important;
+}
+
+[data-baseweb="popover"] li {
+    background-color: var(--secondary-bg) !important;
+    color: var(--text-color) !important;
+}
+
+[data-baseweb="popover"] li:hover {
+    background-color: var(--item-hover) !important;
+}
+
+.stTextInput input:focus, [data-testid="stChatInput"] textarea:focus {
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* ===== BUTTONS ===== */
+.stButton button {
+    width: 100%;
+    border-radius: 20px;
+    transition: background 0.2s ease;
+    font-size: 0.9rem;
+    font-weight: 500;
+    background-color: var(--secondary-bg) !important;
+    color: var(--text-color) !important;
+    border: none !important;
+}
+
+.stButton button:hover {
+    background-color: var(--item-hover) !important;
+}
+
+.stButton button[kind="primary"] {
+    background: var(--accent-gradient) !important;
+    border: none !important;
+    color: white !important;
+}
+
+/* Primary button text must be white */
+.stButton button[kind="primary"] span,
+.stButton button[kind="primary"] p,
+.stButton button[kind="primary"] div {
+    color: white !important;
+}
+
+/* Quick action buttons */
+.quick-action-btn button {
+    height: 45px !important;
+    font-weight: 500;
+    font-size: 0.8rem !important;
+    padding: 0.3rem 0.5rem !important;
+}
+
+/* ===== STATUS INDICATORS ===== */
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: inline-block;
+    margin: 0.25rem;
+}
+
+.status-success {
+    background-color: rgba(14, 66, 54, 0.15);
+    color: #0e4236;
+}
+
+.status-error {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+/* ===== EXPANDER ===== */
+.streamlit-expanderHeader {
+    background-color: var(--input-bg) !important;
+    color: var(--text-color) !important;
+    border-radius: 8px !important;
+    border: none !important;
+}
+
+.streamlit-expanderHeader:hover {
+    background-color: var(--item-hover) !important;
+}
+
+.streamlit-expanderHeader p, .streamlit-expanderHeader span {
+    color: var(--text-color) !important;
+}
+
+.streamlit-expanderContent {
+    background-color: var(--secondary-bg) !important;
+    border: none !important;
+}
+
+.streamlit-expanderContent p, .streamlit-expanderContent span,
+.streamlit-expanderContent div, .streamlit-expanderContent label {
+    color: var(--text-color) !important;
+}
+
+/* New Streamlit expander selectors */
+[data-testid="stExpander"] {
+    background-color: var(--secondary-bg) !important;
+    border: none !important;
+    border-radius: 8px !important;
+}
+
+[data-testid="stExpander"] > div:first-child {
+    background-color: var(--input-bg) !important;
+    border-radius: 8px !important;
+}
+
+[data-testid="stExpander"] details {
+    background-color: var(--secondary-bg) !important;
+}
+
+[data-testid="stExpander"] summary {
+    background-color: var(--input-bg) !important;
+    color: var(--text-color) !important;
+}
+
+[data-testid="stExpander"] details[open] > summary {
+    background-color: var(--input-bg) !important;
+}
+
+[data-testid="stExpander"] details > div {
+    background-color: var(--secondary-bg) !important;
+}
+
+/* Expander content captions */
+.streamlit-expanderContent .stCaption {
+    color: var(--text-secondary) !important;
+}
+
+/* ===== DIVIDERS ===== */
+hr {
+    border-color: var(--border-color) !important;
+}
+
+/* ===== METRICS ===== */
+[data-testid="stMetricValue"] {
+    color: var(--accent-color) !important;
+}
+
+[data-testid="stMetricLabel"] {
+    color: var(--text-secondary) !important;
+}
+
+/* Empty state */
+.empty-history {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    padding: 20px;
+    font-style: italic;
+}
+
+/* Loading animation */
+.loading-text {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* Department link styling */
+.dept-link {
+    text-align: center;
+    padding: 15px;
+    margin-top: 10px;
+    background: var(--item-bg);
+    border-radius: 8px;
+}
+
+.dept-link a {
+    color: var(--accent-color) !important;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.dept-link a:hover {
+    text-decoration: underline;
+}
+
+/* ===== FOOTER ===== */
+footer {
+    background-color: var(--bg-color) !important;
+}
+
+footer, footer * {
+    color: var(--text-secondary) !important;
+}
+
+/* ===== DOWNLOAD BUTTONS ===== */
+/* Explicit styling for download buttons */
+.stDownloadButton button,
+[data-testid="stDownloadButton"] button,
+[data-testid="stDownloadButton"] > button {
+    background-color: var(--secondary-bg) !important;
+    color: var(--text-color) !important;
+    border: none !important;
+    border-radius: 20px !important;
+    transition: background 0.2s ease !important;
+    font-weight: 500 !important;
+}
+
+.stDownloadButton button span,
+.stDownloadButton button p,
+.stDownloadButton button div,
+[data-testid="stDownloadButton"] button span,
+[data-testid="stDownloadButton"] button p,
+[data-testid="stDownloadButton"] button div {
+    color: var(--text-color) !important;
+}
+
+.stDownloadButton button:hover,
+[data-testid="stDownloadButton"] button:hover {
+    background-color: var(--item-hover) !important;
+}
+
+/* Ensure download buttons in expanders have correct styling */
+[data-testid="stExpander"] .stDownloadButton button,
+[data-testid="stExpander"] [data-testid="stDownloadButton"] button {
+    background-color: var(--secondary-bg) !important;
+    color: var(--text-color) !important;
+    border: none !important;
+}
+
+[data-testid="stExpander"] .stDownloadButton button span,
+[data-testid="stExpander"] [data-testid="stDownloadButton"] button span {
+    color: var(--text-color) !important;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+    .message-history-panel {
+        display: none;
+    }
+    
+    .main .block-container {
+        padding-right: 1rem;
+        max-width: 100%;
+        margin-right: 0;
+    }
+}
+
+/* ===== INTERACTIVE QUIZ STYLING ===== */
+/* Quiz container */
+.stRadio > div {
+    background-color: var(--secondary-bg);
+    border-radius: 12px;
+    padding: 8px 12px;
+    margin: 4px 0;
+}
+
+/* Radio button options */
+.stRadio > div > label {
+    background-color: var(--item-bg) !important;
+    border-radius: 8px !important;
+    padding: 10px 16px !important;
+    margin: 4px 0 !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    display: block !important;
+    border: 2px solid transparent !important;
+}
+
+.stRadio > div > label:hover {
+    background-color: var(--item-hover) !important;
+    border-color: var(--accent-color) !important;
+    transform: translateX(4px);
+}
+
+/* Selected radio option */
+.stRadio > div > label[data-checked="true"],
+.stRadio > div > label:has(input:checked) {
+    background-color: rgba(14, 66, 54, 0.15) !important;
+    border-color: var(--accent-color) !important;
+}
+
+/* Quiz question text */
+.stMarkdown strong {
+    color: var(--text-color);
+}
+
+/* Submit button styling for quiz */
+button[kind="primary"] {
+    background: var(--accent-gradient) !important;
+    border: none !important;
+    font-weight: 600 !important;
+}
