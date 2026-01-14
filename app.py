@@ -1099,6 +1099,24 @@ When the user requests CMD_EXPLAIN_MORE:
 [EXTERNAL LEARNING TOOLS & RESOURCES]
 ⚠️ LANGUAGE REMINDER: Explain all resources IN THE STUDENT'S PREFERRED LANGUAGE.
 
+**OFFICIAL COURSE RESOURCES - Recommend these when relevant:**
+When students ask about:
+- **Course syllabus, schedule, or course structure** → Recommend: [📋 Course Syllabus 2025/26](https://hkuhk-my.sharepoint.com/:w:/g/personal/pablot_hku_hk/IQA9JsO9FSBJQLiOPSfk4w-lAWRCn6skb-ObwSR_vtj4cZk?e=ULXiqR)
+
+- **Course content overview, what topics are covered, or semester planning** → Recommend: [📖 Course Contents Summary](https://hkuhk-my.sharepoint.com/:w:/g/personal/pablot_hku_hk/IQDINc5UzBQhS4Mp4t2rC99_AWaikqT-OGpC4-9vaKgY7wM?e=uJyeHa) - Comprehensive English summary of all course content
+
+- **Assignments, grades, course materials, or general course questions** → Recommend: [🏠 Moodle Course 2025/26](https://moodle.hku.hk/course/view.php?id=136141)
+
+- **Latest updates, announcements, important dates** → Recommend: [📢 Course Announcements](https://moodle.hku.hk/mod/forum/view.php?id=3990047)
+
+- **Extra reading materials, practice books, or wanting to read more in Spanish** → Recommend: [📕 Easy Readers (e-books)](https://moodle.hku.hk/pluginfile.php/6225750/mod_folder/content/0/Easy%20readers%20%28e-books%29.pdf?forcedownload=1) - Great for additional practice
+
+**How to recommend resources:**
+- Mention the resource naturally in your response (in the student's preferred language)
+- Include the clickable markdown link
+- Briefly explain what they'll find there
+- Example: "Para ver el cronograma completo del curso, puedes revisar el [📋 Course Syllabus 2025/26](link). Allí encontrarás todas las fechas importantes."
+
 When students ask about external tools, apps, games, or resources to practice Spanish:
 1. **FIRST PRIORITY - HKU TEACHER-DESIGNED GAMES**: Enthusiastically recommend the digital games created specifically for Spanish Year 1 by your teachers:
    - 🤖 **The CONJUGATOR**: A game designed by HKU teachers to practice verb conjugation: https://conjugator.pablotorrado.site/
@@ -1873,6 +1891,23 @@ try:
                 st.markdown("**📝 Quiz Average**")
                 st.progress(avg / 100)
                 st.caption(f"{avg:.0f}% ({len(scores)} quizzes)")
+        
+        # ===== COURSE RESOURCES =====
+        with st.expander("📚 Course Resources"):
+            st.markdown("**📄 Essential Documents**")
+            st.markdown("[📋 Course Syllabus 2025/26](https://hkuhk-my.sharepoint.com/:w:/g/personal/pablot_hku_hk/IQA9JsO9FSBJQLiOPSfk4w-lAWRCn6skb-ObwSR_vtj4cZk?e=ULXiqR)")
+            st.markdown("[📖 Course Contents Summary](https://hkuhk-my.sharepoint.com/:w:/g/personal/pablot_hku_hk/IQDINc5UzBQhS4Mp4t2rC99_AWaikqT-OGpC4-9vaKgY7wM?e=uJyeHa)")
+            
+            st.divider()
+            
+            st.markdown("**🎓 Moodle Links**")
+            st.markdown("[🏠 Moodle Course 2025/26](https://moodle.hku.hk/course/view.php?id=136141)")
+            st.markdown("[📢 Course Announcements](https://moodle.hku.hk/mod/forum/view.php?id=3990047)")
+            
+            st.divider()
+            
+            st.markdown("**📚 Extra Reading**")
+            st.markdown("[📕 Easy Readers (e-books)](https://moodle.hku.hk/pluginfile.php/6225750/mod_folder/content/0/Easy%20readers%20%28e-books%29.pdf?forcedownload=1)")
         
         # ===== ABOUT =====
         with st.expander("ℹ️ About"):
