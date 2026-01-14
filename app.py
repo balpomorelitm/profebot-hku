@@ -67,8 +67,34 @@ st.set_page_config(
 # ==========================================
 hide_streamlit_style = """
 <style>
-    /* Hide top header, hamburger menu, and deploy button */
+    /* Hide top header content but keep structure for sidebar toggle */
     header {visibility: hidden;}
+    header::before {
+        content: "";
+        display: block;
+        visibility: visible;
+    }
+    
+    /* Force sidebar toggle button to be visible */
+    [data-testid="collapsedControl"] {
+        visibility: visible !important;
+        display: flex !important;
+        position: fixed !important;
+        top: 0.5rem !important;
+        left: 0.5rem !important;
+        z-index: 999999 !important;
+        background: rgba(255, 255, 255, 0.9) !important;
+        padding: 0.5rem !important;
+        border-radius: 0.5rem !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+    }
+    
+    [data-testid="collapsedControl"] button {
+        visibility: visible !important;
+        display: block !important;
+    }
+    
+    /* Hide other header elements */
     #MainMenu {visibility: hidden;}
     .stDeployButton {display:none;}
     
@@ -87,10 +113,6 @@ hide_streamlit_style = """
     .styles_viewerBadge__1yB5_ {display: none !important;}
     [data-testid="stAppViewBlockContainer"] > div:last-child {display: none !important;}
     iframe[title="streamlit_app"] {display: none !important;}
-    
-    /* Ensure sidebar toggle button is always visible */
-    [data-testid="collapsedControl"] {display: block !important; visibility: visible !important;}
-    button[kind="header"] {display: block !important; visibility: visible !important;}
     
     /* Remove extra top padding caused by hiding the header */
     .block-container {
