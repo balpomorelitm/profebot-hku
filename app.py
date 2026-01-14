@@ -115,8 +115,9 @@ hide_streamlit_style = """
         display: none !important;
     }
     
-    /* Hide any arrow buttons in sidebar */
-    [data-testid="stSidebar"] button[aria-label] {
+    /* Hide only the collapse arrow button in sidebar */
+    [data-testid="stSidebar"] button[aria-label*="collapse"],
+    [data-testid="stSidebar"] button[aria-label*="Collapse"] {
         display: none !important;
     }
     
@@ -1652,21 +1653,11 @@ def process_user_input(user_text: str, quick_action: str = None):
 if "debug_logs" not in st.session_state:
     st.session_state.debug_logs = []
 
-st.session_state.debug_logs.append("🔍 Code reached before sidebar")
-st.session_state.debug_logs.append(f"🔍 Threads: {len(st.session_state.threads)}")
-st.session_state.debug_logs.append(f"🔍 Current thread: {st.session_state.current_thread_id}")
-
-# Display persistent debug logs
-for log in st.session_state.debug_logs[-10:]:  # Last 10 logs
-    st.write(log)
-
 # ==========================================
 # SIDEBAR
 # ==========================================
 try:
-    st.session_state.debug_logs.append("🔍 Entering sidebar try block")
     with st.sidebar:
-        st.write("🔍 DEBUG: Inside sidebar context")
         st.markdown("### 🎓 ProfeBot Control")
         
         # ===== CONVERSATIONS =====
@@ -1836,20 +1827,9 @@ try:
         
         st.divider()
         st.markdown("[🏛️ HKU Spanish Dept](https://spanish.hku.hk/)", unsafe_allow_html=True)
-        
-        st.session_state.debug_logs.append("🔍 Sidebar completed successfully")
 
 except Exception as e:
-    error_msg = f"🔍 DEBUG: Sidebar error: {e}"
-    st.session_state.debug_logs.append(error_msg)
-    st.error(error_msg)
-    import traceback
-    tb = traceback.format_exc()
-    st.session_state.debug_logs.append(tb)
-    st.text(tb)
-
-st.session_state.debug_logs.append("🔍 After sidebar")
-st.write("🔍 DEBUG: After sidebar")
+    st.error(f"Sidebar error: {e}")
 
 # ==========================================
 # FLOATING MESSAGE HISTORY PANEL
