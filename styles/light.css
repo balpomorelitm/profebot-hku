@@ -269,7 +269,27 @@ header, [data-testid="stHeader"] {
     background-color: var(--input-bg) !important;
     color: var(--text-color) !important;
     border: none !important;
-    border-radius: 20px !important;
+    border-radius: 4px !important;
+}
+
+/* Fix placeholder text color */
+.stTextInput input::placeholder, 
+[data-testid="stChatInput"] textarea::placeholder {
+    color: var(--text-secondary) !important;
+    opacity: 0.7 !important;
+}
+
+/* Remove white semicircle/decoration on left side of input */
+[data-testid="stChatInput"]::before,
+[data-testid="stChatInput"]::after,
+[data-testid="stChatInputContainer"]::before,
+[data-testid="stChatInputContainer"]::after {
+    display: none !important;
+}
+
+[data-testid="stChatInput"] > div::before,
+[data-testid="stChatInput"] > div::after {
+    display: none !important;
 }
 
 /* Chat input container/wrapper */
@@ -281,6 +301,22 @@ header, [data-testid="stHeader"] {
 [data-testid="stChatInput"] > div {
     background-color: var(--input-bg) !important;
     border-color: var(--border-color) !important;
+    border-radius: 4px !important;
+    overflow: hidden !important;
+}
+
+/* Remove any white gaps/spaces around rounded input */
+[data-testid="stChatInput"] > div > div {
+    background-color: var(--input-bg) !important;
+    border-radius: 4px !important;
+}
+
+[data-testid="stChatInputContainer"] {
+    background-color: var(--bg-color) !important;
+}
+
+[data-testid="stChatInputContainer"] > div {
+    background-color: var(--bg-color) !important;
 }
 
 /* Bottom chat input area */
@@ -347,6 +383,29 @@ header, [data-testid="stHeader"] {
     background-color: var(--secondary-bg) !important;
     color: var(--text-color) !important;
     border: none !important;
+}
+
+/* Sidebar buttons specifically aligned left */
+[data-testid="stSidebar"] .stButton button,
+[data-testid="stSidebar"] .stDownloadButton button,
+[data-testid="stSidebar"] button {
+    text-align: left !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    padding-left: 1rem !important;
+}
+
+[data-testid="stSidebar"] button > div {
+    display: flex !important;
+    justify-content: flex-start !important;
+    text-align: left !important;
+    width: 100% !important;
+}
+
+[data-testid="stSidebar"] button p {
+    text-align: left !important;
+    margin: 0 !important;
 }
 
 .stButton button:hover {
