@@ -188,19 +188,8 @@ hide_streamlit_style = """
         padding-top: 3rem !important; 
     }
     
-    /* ===== MOBILE MENU VISIBILITY ===== */
-    /* Hide mobile menu expander on desktop */
-    .main [data-testid="stExpander"]:first-of-type {
-        display: none !important;
-    }
-    
     /* ===== MOBILE RESPONSIVE DESIGN ===== */
     @media (max-width: 768px) {
-        /* SHOW mobile menu on mobile */
-        .main [data-testid="stExpander"]:first-of-type {
-            display: block !important;
-        }
-        
         /* HIDE sidebar completely on mobile */
         [data-testid="stSidebar"],
         [data-testid="collapsedControl"],
@@ -2308,7 +2297,31 @@ def check_for_quiz_in_last_response() -> Optional[Dict]:
 # ==========================================
 # MAIN CHAT INTERFACE
 # ==========================================
-# Mobile menu expander (CSS in hide_streamlit_style hides this on desktop)
+# JavaScript to hide mobile menu on desktop
+components.html("""
+<script>
+    function hideMobileMenu() {
+        if (window.innerWidth > 768) {
+            // Find expander with "Menu" text and hide it
+            const expanders = window.parent.document.querySelectorAll('[data-testid="stExpander"]');
+            expanders.forEach(exp => {
+                const summary = exp.querySelector('summary, [data-testid="stExpanderToggle"]');
+                if (summary && summary.textContent.includes('Menu')) {
+                    exp.style.display = 'none';
+                }
+            });
+        }
+    }
+    // Run on load and on resize
+    hideMobileMenu();
+    window.parent.addEventListener('resize', hideMobileMenu);
+    // Also run after a short delay to ensure Streamlit has rendered
+    setTimeout(hideMobileMenu, 500);
+    setTimeout(hideMobileMenu, 1000);
+</script>
+""", height=0)
+
+# Mobile menu expander (hidden on desktop via JavaScript above)
 with st.expander("📱 Menu", expanded=False):
     st.markdown("#### 💬 Conversations")
     for thread_id, thread_data in sorted(
