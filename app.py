@@ -81,44 +81,15 @@ hide_streamlit_style = """
     .stDeployButton {display: none !important;}
     header .stActionButton {display: none !important;}
     
-    /* FORCE SIDEBAR TO ALWAYS BE VISIBLE WITH FULL WIDTH */
+    /* SIDEBAR STYLING - 15% narrower */
     [data-testid="stSidebar"] {
-        display: block !important;
-        visibility: visible !important;
-        transform: translateX(0) !important;
         min-width: 17.85rem !important;
         max-width: 17.85rem !important;
         width: 17.85rem !important;
-        position: relative !important;
     }
     
     [data-testid="stSidebar"] > div:first-child {
         width: 17.85rem !important;
-        transform: translateX(0) !important;
-    }
-    
-    [data-testid="stSidebar"][aria-expanded="false"],
-    [data-testid="stSidebar"][aria-expanded="true"] {
-        transform: translateX(0) !important;
-        width: 17.85rem !important;
-    }
-    
-    /* Hide the collapse/expand button since sidebar is always visible */
-    [data-testid="collapsedControl"] {
-        display: none !important;
-        visibility: hidden !important;
-        opacity: 0 !important;
-        pointer-events: none !important;
-    }
-    
-    button[kind="header"] {
-        display: none !important;
-    }
-    
-    /* Hide only the collapse arrow button in sidebar */
-    [data-testid="stSidebar"] button[aria-label*="collapse"],
-    [data-testid="stSidebar"] button[aria-label*="Collapse"] {
-        display: none !important;
     }
     
     /* Hide footer */
