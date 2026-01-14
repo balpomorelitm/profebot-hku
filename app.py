@@ -88,6 +88,10 @@ hide_streamlit_style = """
     [data-testid="stAppViewBlockContainer"] > div:last-child {display: none !important;}
     iframe[title="streamlit_app"] {display: none !important;}
     
+    /* Ensure sidebar toggle button is always visible */
+    [data-testid="collapsedControl"] {display: block !important; visibility: visible !important;}
+    button[kind="header"] {display: block !important; visibility: visible !important;}
+    
     /* Remove extra top padding caused by hiding the header */
     .block-container {
         padding-top: 1rem !important; 
@@ -1649,36 +1653,21 @@ with st.sidebar:
     
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("🔄 Refresh", use_container_width=True):
-            with st.spinner("Refreshing..."):
-                get_weekly_content.clear()
-                st.session_state.contexto = get_weekly_content()
-                st.session_state.last_sync = datetime.now()
-                st.rerun()
-    
-    with col2:
         if st.button("➕ New", use_container_width=True):
             create_new_thread()
             st.rerun()
     
-    if st.button("🗑️ Clear Chat", use_container_width=True):
-        current_thread = get_current_thread()
-        current_thread["messages"] = [{
-            "role": "assistant", 
-            "content": "¡Hola! 👋 Chat cleared!"
-        }]
-        current_thread["suggestions"] = []
-        st.session_state.selected_message_index = None
-        save_threads_to_file()  # Persist cleared chat
-        st.rerun()
-    
-    st.divider()
-    
-    # SETTINGS (includes status, language, night mode)
-    with st.expander("⚙️ Settings", expanded=False):
-        # Status indicators
-        st.markdown("**📊 Status**")
-        if st.session_state.context_loaded:
+    with col2:
+        if st.button("🗑️ Clear Chat", use_container_width=True):
+            current_thread = get_current_thread()
+            current_thread["messages"] = [{
+                "role": "assistant", 
+                "content": "¡Hola! 👋 Chat cleared!"
+            }]
+            current_thread["suggestions"] = []
+            st.session_state.selected_message_index = None
+            save_threads_to_file()  # Persist cleared chat
+            st.rerun()
             if "❌" not in st.session_state.contexto:
                 st.markdown('<div class="status-badge status-success">✓ Connected</div>', unsafe_allow_html=True)
             else:
@@ -1765,36 +1754,6 @@ with st.sidebar:
                 )
         else:
             st.caption("⚠️ Install python-docx to enable Word export")
-    
-    # Analytics / Usage Stats
-    with st.expander("📊 Usage Stats", expanded=False):
-        analytics = get_analytics_summary()
-        
-        st.markdown("**📈 Your Statistics**")
-        col_stat1, col_stat2 = st.columns(2)
-        with col_stat1:
-            st.metric("Messages", analytics["total_messages"])
-        with col_stat2:
-            st.metric("Sessions", analytics["total_sessions"])
-        
-        st.metric("Avg Response", f"{analytics['avg_response_time']:.1f}s")
-        
-        if analytics["top_topics"]:
-            st.markdown("**🎯 Top Topics**")
-            for topic, count in analytics["top_topics"][:5]:
-                st.caption(f"• {topic}: {count}")
-        
-        if analytics["popular_actions"]:
-            st.markdown("**⚡ Popular Actions**")
-            for action, count in analytics["popular_actions"][:3]:
-                st.caption(f"• {action}: {count}")
-        
-        # Cache stats
-        cache_stats = get_cache_stats()
-        st.divider()
-        st.markdown("**💾 Response Cache**")
-        st.caption(f"Cached: {cache_stats['entries']}/{cache_stats['max_size']}")
-        st.caption(f"Total hits: {cache_stats['total_hits']}")
     
     # My Learning Progress
     with st.expander("📈 My Progress", expanded=False):
