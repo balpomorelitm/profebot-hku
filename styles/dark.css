@@ -317,6 +317,22 @@ header, [data-testid="stHeader"] {
 [data-testid="stChatInput"] > div {
     background-color: var(--input-bg) !important;
     border-color: var(--border-color) !important;
+    border-radius: 20px !important;
+    overflow: hidden !important;
+}
+
+/* Remove any white gaps/spaces around rounded input */
+[data-testid="stChatInput"] > div > div {
+    background-color: var(--input-bg) !important;
+    border-radius: 20px !important;
+}
+
+[data-testid="stChatInputContainer"] {
+    background-color: var(--bg-color) !important;
+}
+
+[data-testid="stChatInputContainer"] > div {
+    background-color: var(--bg-color) !important;
 }
 
 /* Bottom chat input area */
@@ -328,8 +344,16 @@ header, [data-testid="stHeader"] {
     background-color: var(--bg-color) !important;
 }
 
+[data-testid="stBottom"] * {
+    background-color: transparent !important;
+}
+
 .stChatInputContainer {
     background-color: var(--bg-color) !important;
+}
+
+.stChatInputContainer * {
+    background-color: transparent !important;
 }
 
 /* ===== SELECTBOX STYLING ===== */
