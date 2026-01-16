@@ -222,7 +222,7 @@ KEY_FAST = secrets["HKU_API_KEY"]
 # Available models: gpt-4.1-nano, gpt-4.1-mini, gpt-4.1, o4-mini, gpt-5-nano, gpt-5-mini, gpt-5-chat, gpt-5, gpt-5.1
 MODEL_SMART_ID = "gpt-5"
 ENDPOINT_SMART = f"{HKU_API_BASE}/openai/deployments/{MODEL_SMART_ID}/chat/completions?api-version={HKU_API_VERSION}"
-KEY_SMART = secrets["HKU_API_KEY"]  # Same key for all HKU APIs
+KEY_SMART = secrets["HKU_GPT_KEY"]
 
 # Enable hybrid routing (uses GPT for complex queries, DeepSeek for simple)
 USE_HYBRID_ROUTER = True
@@ -754,6 +754,8 @@ def call_ai_model(
             headers,
             json_payload=payload
         )
+        if response and response.status_code != 200:
+            logger.error(f"SMART API Error ({response.status_code}): {response.text[:500]}")
     else:
         # DeepSeek-V3 configuration
         headers = {
@@ -774,6 +776,8 @@ def call_ai_model(
             json_payload=payload,
             params={"deployment-id": MODEL_FAST_ID}
         )
+        if response and response.status_code != 200:
+            logger.error(f"FAST API Error ({response.status_code}): {response.text[:500]}")
     
     if not response:
         logger.error(f"No response from {model_type} model")
