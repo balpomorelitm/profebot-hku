@@ -1186,6 +1186,10 @@ At the very end of your response, you MUST generate exactly 3 suggested follow-u
     
     if result is None:
         return "❌ Failed to connect to AI service. Please try again later."
+
+    # Strip chain-of-thought if present
+    result = re.sub(r"<think>.*?</think>", "", result, flags=re.DOTALL | re.IGNORECASE)
+    result = re.sub(r"</?think>", "", result, flags=re.IGNORECASE).strip()
     
     # Cache the response for future use (only for non-contextual queries)
     if not is_contextual and not admin_query:
@@ -2053,9 +2057,12 @@ def render_interactive_quiz(quiz_data: Dict, quiz_id: str):
     if 'quiz_answers' not in st.session_state:
         st.session_state.quiz_answers = {}
     
+    def get_quiz_answer_key(q_index: int, q_number: int) -> str:
+        return f"{quiz_id}_q{q_index}_{q_number}"
+
     # Render each question
-    for q in quiz_data['questions']:
-        q_key = f"{quiz_id}_q{q['number']}"
+    for q_index, q in enumerate(quiz_data['questions']):
+        q_key = get_quiz_answer_key(q_index, q['number'])
         
         st.markdown(f"**{q['number']}. {q['question']}**")
         
@@ -2086,9 +2093,12 @@ def render_interactive_quiz(quiz_data: Dict, quiz_id: str):
     st.markdown("---")
     
     # Count answered questions
-    answered = sum(1 for q in quiz_data['questions'] 
-                   if f"{quiz_id}_q{q['number']}" in st.session_state.quiz_answers 
-                   and st.session_state.quiz_answers[f"{quiz_id}_q{q['number']}"])
+    answered = sum(
+        1
+        for q_index, q in enumerate(quiz_data['questions'])
+        if get_quiz_answer_key(q_index, q['number']) in st.session_state.quiz_answers
+        and st.session_state.quiz_answers[get_quiz_answer_key(q_index, q['number'])]
+    )
     
     st.caption(f"✅ Answered: {answered}/{quiz_data['total']}")
     
@@ -2108,8 +2118,8 @@ def render_interactive_quiz(quiz_data: Dict, quiz_id: str):
     with col2:
         if st.button("🔄 Clear Answers", use_container_width=True, key=f"clear_{quiz_id}"):
             # Clear answers for this quiz
-            for q in quiz_data['questions']:
-                q_key = f"{quiz_id}_q{q['number']}"
+            for q_index, q in enumerate(quiz_data['questions']):
+                q_key = get_quiz_answer_key(q_index, q['number'])
                 if q_key in st.session_state.quiz_answers:
                     del st.session_state.quiz_answers[q_key]
             st.rerun()
@@ -2119,8 +2129,11 @@ def format_quiz_answers_for_submission(quiz_data: Dict, quiz_id: str) -> str:
     """Format the user's quiz answers for submission to the AI."""
     answers = []
     
-    for q in quiz_data['questions']:
-        q_key = f"{quiz_id}_q{q['number']}"
+    def get_quiz_answer_key(q_index: int, q_number: int) -> str:
+        return f"{quiz_id}_q{q_index}_{q_number}"
+
+    for q_index, q in enumerate(quiz_data['questions']):
+        q_key = get_quiz_answer_key(q_index, q['number'])
         answer = st.session_state.quiz_answers.get(q_key, "Not answered")
         
         # Include the question and selected answer
