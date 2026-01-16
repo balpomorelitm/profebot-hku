@@ -1,0 +1,14 @@
+name: Keep App Awake
+
+on:
+  schedule:
+    # Runs at 00:00, 09:00, 12:00, 15:00, 18:00, 21:00 UTC (approx every 3-4 hours)
+    - cron: "0 0,9,12,15,18,21 * * *"
+  workflow_dispatch: # Allows you to run it manually to test
+
+jobs:
+  wake_up:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Poke App
+        run: curl -N https://profebot-hku-jsdx4w6hqwkeaaa49c7ewu.streamlit.app/
