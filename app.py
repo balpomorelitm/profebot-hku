@@ -218,11 +218,10 @@ MODEL_FAST_ID = "DeepSeek-V3"
 ENDPOINT_FAST = f"{HKU_API_BASE}/deepseek/models/chat/completions"
 KEY_FAST = secrets["HKU_API_KEY"]
 
-# Smart Model (GPT-5) - For complex queries
-# Available models: gpt-4.1-nano, gpt-4.1-mini, gpt-4.1, o4-mini, gpt-5-nano, gpt-5-mini, gpt-5-chat, gpt-5, gpt-5.1
-MODEL_SMART_ID = "gpt-5"
-ENDPOINT_SMART = f"{HKU_API_BASE}/openai/deployments/{MODEL_SMART_ID}/chat/completions?api-version={HKU_API_VERSION}"
-KEY_SMART = secrets["HKU_GPT_KEY"]
+# Smart Model (DeepSeek-R1) - For complex queries
+MODEL_SMART_ID = "DeepSeek-R1"
+ENDPOINT_SMART = f"{HKU_API_BASE}/deepseek/models/chat/completions"
+KEY_SMART = secrets["HKU_API_KEY"]
 
 # Enable hybrid routing (uses GPT for complex queries, DeepSeek for simple)
 USE_HYBRID_ROUTER = True
@@ -736,14 +735,14 @@ def call_ai_model(
         Response content string or None if failed
     """
     if model_type == "smart":
-        # HKU OpenAI (GPT-4.1) configuration
-        # Uses same Ocp-Apim-Subscription-Key header as DeepSeek
+        # DeepSeek-R1 configuration (same gateway as DeepSeek-V3)
         headers = {
             "Content-Type": "application/json",
             "Cache-Control": "no-cache",
             "Ocp-Apim-Subscription-Key": KEY_SMART
         }
         payload = {
+            "model": MODEL_SMART_ID,
             "messages": messages,
             "max_tokens": max_tokens,
             "temperature": temperature
@@ -752,7 +751,8 @@ def call_ai_model(
             "POST",
             ENDPOINT_SMART,
             headers,
-            json_payload=payload
+            json_payload=payload,
+            params={"deployment-id": MODEL_SMART_ID}
         )
         if response and response.status_code != 200:
             logger.error(f"SMART API Error ({response.status_code}): {response.text[:500]}")
