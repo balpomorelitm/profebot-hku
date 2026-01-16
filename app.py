@@ -853,10 +853,32 @@ def get_ai_response(user_message: str, notion_context: str, language: str, custo
         custom_language: Custom language if 'Other' selected
         conversation_history: List of previous messages in the conversation
     """
+    def is_admin_query(text: str) -> bool:
+        admin_keywords = [
+            "syllabus", "sílabo", "silabo", "schedule", "calendar", "calendario",
+            "grading", "grades", "nota", "notas", "assessment", "evaluacion",
+            "evaluation", "examen", "exam", "policy", "policies", "attendance",
+            "asistencia", "office hours", "tutorias", "consultas", "materials",
+            "materiales", "texto", "textbook", "libro", "course", "asignatura",
+            "logistics", "logistica", "administrative", "administrativo",
+            "deadline", "fecha", "entrega"
+        ]
+        text_lower = text.lower()
+        return any(kw in text_lower for kw in admin_keywords)
+
+    def extract_info_general(context: str) -> str:
+        marker = "=== UNIT: INFO GENERAL ==="
+        if marker not in context:
+            return ""
+        start = context.find(marker)
+        end = context.find("==============================", start)
+        if end == -1:
+            return context[start:].strip()
+        return context[start:end + len("==============================")].strip()
     
     # Check cache first for simple, non-contextual queries
     is_contextual = conversation_history and len(conversation_history) > 2
-    if not is_contextual:
+    if not is_contextual and not admin_query:
         cached = get_cached_response(user_message, language)
         if cached:
             # Add cache indicator for router info
@@ -865,6 +887,8 @@ def get_ai_response(user_message: str, notion_context: str, language: str, custo
     language_instruction = get_language_instruction(language, custom_language)
     semester_info = get_current_semester_info()
     user_context = get_user_context_for_prompt()
+    admin_query = is_admin_query(user_message)
+    info_general_context = extract_info_general(notion_context) if admin_query else ""
     
     system_prompt = f"""
 [ROLE AND PROFILE]
@@ -1068,6 +1092,9 @@ When students ask about external tools, apps, games, or resources to practice Sp
    - Exam information
    - Assignment deadlines and submission guidelines
 
+[INFO GENERAL OVERRIDE]
+If the user question is about syllabus, assessment, schedule, or other administrative topics, use ONLY the "INFO GENERAL" unit below. If the information is not present, say you do not have it and point to the official syllabus link.
+
 [DYNAMIC FOLLOW-UP SYSTEM]
 At the very end of your response, you MUST generate exactly 3 suggested follow-up questions for the student.
 ⚠️ **CRITICAL - FOLLOW-UP LANGUAGE**: These 3 suggestions MUST be written in the STUDENT'S PREFERRED LANGUAGE, **NEVER in Spanish** (unless Spanish IS their preferred language).
@@ -1079,6 +1106,9 @@ At the very end of your response, you MUST generate exactly 3 suggested follow-u
 
 --- ACTIVE CONTENT ---
 {notion_context}
+
+--- INFO GENERAL (ADMIN ONLY) ---
+{info_general_context if info_general_context else "INFO GENERAL not found in Active Content."}
 """
 
     # Build messages array with conversation history
@@ -1106,7 +1136,7 @@ At the very end of your response, you MUST generate exactly 3 suggested follow-u
     # ==========================================
     if USE_HYBRID_ROUTER:
         # Step 1: Classify query complexity using fast model
-        complexity = classify_query_complexity(user_message, conversation_history)
+        complexity = "COMPLEX" if admin_query else classify_query_complexity(user_message, conversation_history)
         logger.info(f"Query classified as: {complexity}")
         
         # Step 2: Select model based on complexity
@@ -1138,7 +1168,7 @@ At the very end of your response, you MUST generate exactly 3 suggested follow-u
         return "❌ Failed to connect to AI service. Please try again later."
     
     # Cache the response for future use (only for non-contextual queries)
-    if not is_contextual:
+    if not is_contextual and not admin_query:
         cache_response(user_message, language, result)
     
     # Inject router debug info (hidden in HTML comment for optional display)
