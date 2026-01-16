@@ -91,65 +91,41 @@ hide_streamlit_style = """
         z-index: 1 !important;
     }
 
-    /* 4. Force sidebar toggle to stay visible */
-    [data-testid="collapsedControl"],
-    [data-testid="stSidebarCollapsedControl"],
-    button[aria-label="Open sidebar"],
-    button[aria-label="Close sidebar"],
-    button[title="Open sidebar"],
-    button[title="Close sidebar"],
-    button[kind="header"] {
-        display: inline-flex !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        z-index: 1002 !important;
-        pointer-events: auto !important;
+    /* 4. Sidebar behavior: always visible on desktop, hidden on mobile */
+    @media (min-width: 769px) {
+        [data-testid="collapsedControl"],
+        [data-testid="stSidebarCollapsedControl"],
+        button[aria-label="Open sidebar"],
+        button[aria-label="Close sidebar"],
+        button[title="Open sidebar"],
+        button[title="Close sidebar"],
+        button[kind="header"] {
+            display: none !important;
+        }
+
+        [data-testid="stSidebar"][aria-expanded="false"] {
+            transform: translateX(0) !important;
+            visibility: visible !important;
+            width: 18.47rem !important;
+            min-width: 18.47rem !important;
+            max-width: 18.47rem !important;
+        }
     }
 
-    [data-testid="collapsedControl"],
-    [data-testid="stSidebarCollapsedControl"],
-    button[aria-label="Open sidebar"],
-    button[aria-label="Close sidebar"],
-    button[title="Open sidebar"],
-    button[title="Close sidebar"] {
-        position: fixed !important;
-        left: 8px !important;
-        top: 8px !important;
-        z-index: 1100 !important;
-        width: 40px !important;
-        height: 40px !important;
-        align-items: center !important;
-        justify-content: center !important;
-        border-radius: 10px !important;
-        background: linear-gradient(135deg, #00A86B 0%, #0077C8 100%) !important;
-        border: 2px solid rgba(255,255,255,0.35) !important;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.25) !important;
-        cursor: pointer !important;
-    }
-
-    [data-testid="collapsedControl"] button,
-    [data-testid="stSidebarCollapsedControl"] button {
-        width: 100% !important;
-        height: 100% !important;
-        background: transparent !important;
-        border: none !important;
-        padding: 0 !important;
-        margin: 0 !important;
-    }
-
-    [data-testid="collapsedControl"] svg,
-    [data-testid="stSidebarCollapsedControl"] svg,
-    button[aria-label="Open sidebar"] svg,
-    button[aria-label="Close sidebar"] svg,
-    button[title="Open sidebar"] svg,
-    button[title="Close sidebar"] svg {
-        color: #ffffff !important;
-        fill: #ffffff !important;
-    }
-
-    /* 5. Mobile Layout Fix */
     @media (max-width: 768px) {
         header[data-testid="stHeader"]::before {
+            display: none !important;
+        }
+        [data-testid="stSidebar"] {
+            display: none !important;
+        }
+        [data-testid="collapsedControl"],
+        [data-testid="stSidebarCollapsedControl"],
+        button[aria-label="Open sidebar"],
+        button[aria-label="Close sidebar"],
+        button[title="Open sidebar"],
+        button[title="Close sidebar"],
+        button[kind="header"] {
             display: none !important;
         }
         .block-container {
