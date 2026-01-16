@@ -823,7 +823,6 @@ CLASSIFY AS "SIMPLE" if the query is:
 - Requests for examples of words they already know
 - Yes/no questions about Spanish basics
 - Requests to repeat or clarify previous information
-- Administrative questions about the course
 
 CLASSIFY AS "COMPLEX" if the query is:
 - Grammar explanations requiring detailed breakdowns
@@ -835,6 +834,7 @@ CLASSIFY AS "COMPLEX" if the query is:
 - Questions about verb conjugation patterns
 - Requests for "more explanation" (CMD_EXPLAIN_MORE)
 - Any multi-step or creative content generation
+- Administrative questions about the course
 
 Recent conversation context:
 {history_context}
