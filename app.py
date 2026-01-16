@@ -67,219 +67,35 @@ st.set_page_config(
 # ==========================================
 hide_streamlit_style = """
 <style>
-    /* Hide header elements but keep sidebar toggle visible */
+    /* 1. Hide Standard Streamlit UI Elements */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    .stAppDeployButton {display: none;}
+    [data-testid="stToolbar"] {visibility: hidden !important;}
+    [data-testid="stDecoration"] {visibility: hidden !important;}
+    [data-testid="stStatusWidget"] {visibility: hidden !important;}
+
+    /* 2. Hide "Fork" Button & GitHub Badges specifically */
+    /* Targets top-right links and viewer badges */
+    .viewerBadge_container__1QSob {display: none !important;}
+    a[href*="github.com"] {display: none !important;}
+    .stAppHeader a {display: none !important;}
+
+    /* 3. Make Header Transparent (Don't use display:none on the container) */
+    /* Using display:none on the header container itself can break layout calculations */
     header[data-testid="stHeader"] {
         background-color: transparent !important;
     }
-    
-    header[data-testid="stHeader"] > div:first-child {
-        background-color: transparent !important;
-    }
-    
-    /* NUCLEAR OPTION: Hide everything in header except sidebar button */
-    header[data-testid="stHeader"] > div:first-child > div {
-        display: none !important;
-    }
-    
-    /* Keep only the sidebar toggle button visible */
-    header[data-testid="stHeader"] button[kind="header"] {
-        display: block !important;
-        visibility: visible !important;
-    }
-    
-    /* Hide hamburger menu, deploy button, and other header items */
-    #MainMenu {visibility: hidden;}
-    .stDeployButton {display: none !important;}
-    header .stActionButton {display: none !important;}
-    
-    /* Hide Fork button - comprehensive selectors */
-    .stAppHeader a {display: none !important;}
-    header a {display: none !important;}
-    header iframe {display: none !important;}
-    iframe[src*="github"] {display: none !important;}
-    iframe[title] {display: none !important;}
-    iframe {display: none !important;}
-    a[href*="github.com"] {display: none !important;}
-    a[href*="streamlit.io"] {display: none !important;}
-    button[data-testid*="fork"] {display: none !important;}
-    div[data-testid*="fork"] {display: none !important;}
-    header > div > div > a {display: none !important;}
-    [class*="viewerBadge"] {display: none !important;}
-    [class*="GitHubBadge"] {display: none !important;}
-    
-    /* SIDEBAR STYLING */
-    [data-testid="stSidebar"] {
-        min-width: 18.47rem !important;
-        max-width: 18.47rem !important;
-        width: 18.47rem !important;
-    }
-    
-    [data-testid="stSidebar"] > div:first-child {
-        width: 18.47rem !important;
-    }
-    
-    /* Make native collapse button always visible */
-    [data-testid="collapsedControl"] {
-        display: block !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        position: fixed !important;
-        left: 4px !important;
-        top: 4px !important;
-        z-index: 999999 !important;
-        background: linear-gradient(135deg, #00A86B 0%, #0077C8 100%) !important;
-        border: 2px solid rgba(255,255,255,0.3) !important;
-        border-radius: 8px !important;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
-        padding: 8px !important;
-    }
-    
-    button[kind="header"] {
-        display: block !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-    }
-    
-    /* Ensure button visible when collapsed */
-    [data-testid="stSidebar"][aria-expanded="false"] ~ [data-testid="collapsedControl"] {
-        display: block !important;
-        visibility: visible !important;
-        left: 4px !important;
-    }
-    
-    /* Hide footer */
-    footer {visibility: hidden;}
-    
-    /* Hide the 'Manage app' button and bottom toolbar */
-    .stAppDeployButton {display: none !important;}
-    [data-testid="stToolbar"] {visibility: hidden !important;}
-    [data-testid="stStatusWidget"] {visibility: hidden !important;}
-    [data-testid="stDecoration"] {visibility: hidden !important;}
-    
-    /* Hide GitHub link/button (bottom right) */
-    .viewerBadge_container__1QSob {display: none !important;}
-    .viewerBadge_link__1S137 {display: none !important;}
-    .styles_viewerBadge__1yB5_ {display: none !important;}
-    [data-testid="stAppViewBlockContainer"] > div:last-child {display: none !important;}
-    iframe[title="streamlit_app"] {display: none !important;}
-    
-    /* SUPER AGGRESSIVE FORK BUTTON HIDING */
-    header * {
-        background-image: none !important;
-    }
-    
-    header a, header iframe, header img {
-        opacity: 0 !important;
-        width: 0 !important;
-        height: 0 !important;
-        position: absolute !important;
-        left: -9999px !important;
-    }
-    
-    [data-testid="stAppViewBlockContainer"] a[href*="github"],
-    [data-testid="stAppViewBlockContainer"] a[target="_blank"] {
-        display: none !important;
-        visibility: hidden !important;
-        opacity: 0 !important;
-    }
-    
-    /* Adjust top padding */
-    .block-container {
-        padding-top: 3rem !important; 
-    }
-    
-    /* ===== MOBILE RESPONSIVE DESIGN ===== */
+
+    /* 4. Mobile Layout Fix */
     @media (max-width: 768px) {
-        /* HIDE sidebar completely on mobile */
-        [data-testid="stSidebar"],
-        [data-testid="collapsedControl"],
-        button[kind="header"] {
-            display: none !important;
-        }
-        
-        /* Full width content on mobile */
-        [data-testid="stAppViewContainer"] {
-            margin-left: 0 !important;
-        }
-        
         .block-container {
-            padding: 1rem !important;
-            max-width: 100% !important;
-        }
-    }
-    
-    /* For very small screens (phones) */
-    @media (max-width: 480px) {
-        [data-testid="stSidebar"] {
-            min-width: 14rem !important;
-            max-width: 14rem !important;
-            width: 14rem !important;
-        }
-        
-        [data-testid="stSidebar"] > div:first-child {
-            width: 14rem !important;
-            padding: 0.5rem !important;
-        }
-        
-        /* Smaller text in sidebar on very small screens */
-        [data-testid="stSidebar"] {
-            font-size: 0.85rem !important;
-        }
-        
-        [data-testid="stSidebar"] h3 {
-            font-size: 1rem !important;
-        }
-        
-        [data-testid="stSidebar"] h4 {
-            font-size: 0.9rem !important;
+            padding-top: 3rem !important;
         }
     }
 </style>
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
-
-# ==========================================
-# JAVASCRIPT TO REMOVE FORK BUTTON
-# ==========================================
-import streamlit.components.v1 as components
-
-remove_fork_script = """
-<script>
-// Remove Fork button with extreme prejudice
-function removeForkButton() {
-    // Remove all links in header
-    const headerLinks = window.parent.document.querySelectorAll('header a');
-    headerLinks.forEach(link => {
-        link.style.display = 'none';
-        link.remove();
-    });
-    
-    // Remove all iframes
-    const iframes = window.parent.document.querySelectorAll('header iframe');
-    iframes.forEach(iframe => {
-        iframe.style.display = 'none';
-        iframe.remove();
-    });
-    
-    // Remove any element containing "fork" or "github"
-    const allElements = window.parent.document.querySelectorAll('header *');
-    allElements.forEach(el => {
-        const text = el.textContent?.toLowerCase() || '';
-        const href = el.getAttribute('href')?.toLowerCase() || '';
-        if (text.includes('fork') || text.includes('github') || href.includes('github')) {
-            el.style.display = 'none';
-            el.remove();
-        }
-    });
-}
-
-// Run immediately and on every rerun
-removeForkButton();
-setInterval(removeForkButton, 500);
-</script>
-"""
-
-components.html(remove_fork_script, height=0)
 
 # ==========================================
 # CSS LOADING FROM FILES
