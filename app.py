@@ -218,9 +218,9 @@ MODEL_FAST_ID = "DeepSeek-V3"
 ENDPOINT_FAST = f"{HKU_API_BASE}/deepseek/models/chat/completions"
 KEY_FAST = secrets["HKU_API_KEY"]
 
-# Smart Model (GPT-4.1) - For complex queries
+# Smart Model (GPT-5) - For complex queries
 # Available models: gpt-4.1-nano, gpt-4.1-mini, gpt-4.1, o4-mini, gpt-5-nano, gpt-5-mini, gpt-5-chat, gpt-5, gpt-5.1
-MODEL_SMART_ID = "gpt-4.1"  # Good balance of quality and speed
+MODEL_SMART_ID = "gpt-5"
 ENDPOINT_SMART = f"{HKU_API_BASE}/openai/deployments/{MODEL_SMART_ID}/chat/completions?api-version={HKU_API_VERSION}"
 KEY_SMART = secrets["HKU_API_KEY"]  # Same key for all HKU APIs
 
