@@ -756,6 +756,8 @@ def call_ai_model(
         )
         if response and response.status_code != 200:
             logger.error(f"SMART API Error ({response.status_code}): {response.text[:500]}")
+            err_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            st.session_state.last_smart_error = f"{err_time} | {response.status_code}: {response.text[:500]}"
     else:
         # DeepSeek-V3 configuration
         headers = {
@@ -778,9 +780,16 @@ def call_ai_model(
         )
         if response and response.status_code != 200:
             logger.error(f"FAST API Error ({response.status_code}): {response.text[:500]}")
+            err_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            st.session_state.last_fast_error = f"{err_time} | {response.status_code}: {response.text[:500]}"
     
     if not response:
         logger.error(f"No response from {model_type} model")
+        err_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        if model_type == "smart":
+            st.session_state.last_smart_error = f"{err_time} | No response from SMART model"
+        else:
+            st.session_state.last_fast_error = f"{err_time} | No response from FAST model"
         return None
     
     if response.status_code == 200:
@@ -1219,6 +1228,11 @@ def initialize_session_state():
     
     if "dark_mode" not in st.session_state:
         st.session_state.dark_mode = False
+
+    if "last_smart_error" not in st.session_state:
+        st.session_state.last_smart_error = ""
+    if "last_fast_error" not in st.session_state:
+        st.session_state.last_fast_error = ""
     
     # Interactive quiz state
     if "active_quiz" not in st.session_state:
@@ -1822,6 +1836,20 @@ try:
             
             st.caption(f"Messages: {st.session_state.message_count}")
             st.caption(f"Model: {DEPLOYMENT_ID}")
+
+        with st.expander("Diagnostics"):
+            smart_err = st.session_state.get("last_smart_error", "")
+            fast_err = st.session_state.get("last_fast_error", "")
+            if smart_err:
+                st.caption("SMART last error:")
+                st.code(smart_err)
+            else:
+                st.caption("SMART last error: none")
+            if fast_err:
+                st.caption("FAST last error:")
+                st.code(fast_err)
+            else:
+                st.caption("FAST last error: none")
         
         st.divider()
         st.markdown("[🏛️ HKU Spanish Dept](https://spanish.hku.hk/)", unsafe_allow_html=True)
