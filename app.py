@@ -866,18 +866,25 @@ def get_ai_response(user_message: str, notion_context: str, language: str, custo
         custom_language: Custom language if 'Other' selected
         conversation_history: List of previous messages in the conversation
     """
+    def normalize_text(text: str) -> str:
+        import unicodedata
+        normalized = unicodedata.normalize("NFD", text.lower())
+        return "".join(ch for ch in normalized if unicodedata.category(ch) != "Mn")
+
     def is_admin_query(text: str) -> bool:
         admin_keywords = [
-            "syllabus", "sílabo", "silabo", "schedule", "calendar", "calendario",
-            "grading", "grades", "nota", "notas", "assessment", "evaluacion",
-            "evaluation", "examen", "exam", "policy", "policies", "attendance",
-            "asistencia", "office hours", "tutorias", "consultas", "materials",
-            "materiales", "texto", "textbook", "libro", "course", "asignatura",
-            "logistics", "logistica", "administrative", "administrativo",
-            "deadline", "fecha", "entrega"
+            "syllabus", "silabo", "programa", "temario", "guia docente",
+            "plan docente", "info general", "informacion general", "schedule",
+            "calendar", "calendario", "cronograma", "horario", "grading",
+            "grades", "nota", "notas", "assessment", "evaluacion", "evaluation",
+            "examen", "exam", "policy", "policies", "attendance", "asistencia",
+            "office hours", "tutorias", "consultas", "materials", "materiales",
+            "texto", "textbook", "libro", "course", "asignatura", "logistics",
+            "logistica", "administrative", "administrativo", "deadline",
+            "fecha", "entrega", "evaluacion continua", "criterios de evaluacion"
         ]
-        text_lower = text.lower()
-        return any(kw in text_lower for kw in admin_keywords)
+        text_norm = normalize_text(text)
+        return any(kw in text_norm for kw in admin_keywords)
 
     def extract_info_general(context: str) -> str:
         marker = "=== UNIT: INFO GENERAL ==="
