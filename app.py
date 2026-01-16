@@ -79,7 +79,6 @@ hide_streamlit_style = """
     /* Targets top-right links and viewer badges */
     .viewerBadge_container__1QSob {display: none !important;}
     a[href*="github.com"] {display: none !important;}
-    .stAppHeader a {display: none !important;}
 
     /* 3. Make Header Transparent (Don't use display:none on the container) */
     /* Using display:none on the header container itself can break layout calculations */
@@ -87,8 +86,34 @@ hide_streamlit_style = """
         background-color: transparent !important;
     }
 
+    /* Keep sidebar toggle visible and clickable */
+    [data-testid="collapsedControl"],
+    [data-testid="stSidebarCollapsedControl"],
+    button[kind="header"] {
+        display: inline-flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        z-index: 1002 !important;
+        pointer-events: auto !important;
+    }
+
+    [data-testid="collapsedControl"],
+    [data-testid="stSidebarCollapsedControl"] {
+        position: fixed !important;
+        left: 8px !important;
+        top: 8px !important;
+    }
+
+    /* Prevent header title overlay from blocking the menu button */
+    header[data-testid="stHeader"]::before {
+        pointer-events: none;
+    }
+
     /* 4. Mobile Layout Fix */
     @media (max-width: 768px) {
+        header[data-testid="stHeader"]::before {
+            display: none !important;
+        }
         .block-container {
             padding-top: 3rem !important;
         }
