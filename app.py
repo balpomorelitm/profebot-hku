@@ -102,6 +102,31 @@ hide_streamlit_style = """
         position: fixed !important;
         left: 8px !important;
         top: 8px !important;
+        width: 40px !important;
+        height: 40px !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border-radius: 10px !important;
+        background: linear-gradient(135deg, #00A86B 0%, #0077C8 100%) !important;
+        border: 2px solid rgba(255,255,255,0.35) !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.25) !important;
+        cursor: pointer !important;
+    }
+
+    [data-testid="collapsedControl"] button,
+    [data-testid="stSidebarCollapsedControl"] button {
+        width: 100% !important;
+        height: 100% !important;
+        background: transparent !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    [data-testid="collapsedControl"] svg,
+    [data-testid="stSidebarCollapsedControl"] svg {
+        color: #ffffff !important;
+        fill: #ffffff !important;
     }
 
     /* Prevent header title overlay from blocking the menu button */
