@@ -878,6 +878,7 @@ def get_ai_response(user_message: str, notion_context: str, language: str, custo
     
     # Check cache first for simple, non-contextual queries
     is_contextual = conversation_history and len(conversation_history) > 2
+    admin_query = is_admin_query(user_message)
     if not is_contextual and not admin_query:
         cached = get_cached_response(user_message, language)
         if cached:
@@ -887,7 +888,6 @@ def get_ai_response(user_message: str, notion_context: str, language: str, custo
     language_instruction = get_language_instruction(language, custom_language)
     semester_info = get_current_semester_info()
     user_context = get_user_context_for_prompt()
-    admin_query = is_admin_query(user_message)
     info_general_context = extract_info_general(notion_context) if admin_query else ""
     
     system_prompt = f"""
