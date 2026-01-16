@@ -1691,12 +1691,7 @@ try:
             if st.button(mode_label, use_container_width=True, key="btn_dark"):
                 st.session_state.dark_mode = not st.session_state.dark_mode
                 save_threads_to_file()
-                # Force full page reload to avoid blank screen
-                components.html("""
-                <script>
-                    window.parent.location.reload();
-                </script>
-                """, height=0)
+                st.rerun()
         
         # ===== EXPORT =====
         with st.expander("📥 Export Chat"):
@@ -2161,11 +2156,7 @@ with st.expander("📱 Menu", expanded=False):
     if st.button(mode_label, use_container_width=True, key="mobile_btn_dark"):
         st.session_state.dark_mode = not st.session_state.dark_mode
         save_threads_to_file()
-        components.html("""
-        <script>
-            window.parent.location.reload();
-        </script>
-        """, height=0)
+        st.rerun()
 
 # Get current thread
 current_thread = get_current_thread()
