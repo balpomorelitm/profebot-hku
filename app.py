@@ -80,15 +80,24 @@ hide_streamlit_style = """
     .viewerBadge_container__1QSob {display: none !important;}
     a[href*="github.com"] {display: none !important;}
 
-    /* 3. Make Header Transparent (Don't use display:none on the container) */
-    /* Using display:none on the header container itself can break layout calculations */
+    /* 3. Keep header visible without blocking the sidebar toggle */
     header[data-testid="stHeader"] {
         background-color: transparent !important;
+        z-index: 1000 !important;
     }
 
-    /* Keep sidebar toggle visible and clickable */
+    header[data-testid="stHeader"]::before {
+        pointer-events: none !important;
+        z-index: 1 !important;
+    }
+
+    /* 4. Force sidebar toggle to stay visible */
     [data-testid="collapsedControl"],
     [data-testid="stSidebarCollapsedControl"],
+    button[aria-label="Open sidebar"],
+    button[aria-label="Close sidebar"],
+    button[title="Open sidebar"],
+    button[title="Close sidebar"],
     button[kind="header"] {
         display: inline-flex !important;
         visibility: visible !important;
@@ -98,10 +107,15 @@ hide_streamlit_style = """
     }
 
     [data-testid="collapsedControl"],
-    [data-testid="stSidebarCollapsedControl"] {
+    [data-testid="stSidebarCollapsedControl"],
+    button[aria-label="Open sidebar"],
+    button[aria-label="Close sidebar"],
+    button[title="Open sidebar"],
+    button[title="Close sidebar"] {
         position: fixed !important;
         left: 8px !important;
         top: 8px !important;
+        z-index: 1100 !important;
         width: 40px !important;
         height: 40px !important;
         align-items: center !important;
@@ -124,17 +138,16 @@ hide_streamlit_style = """
     }
 
     [data-testid="collapsedControl"] svg,
-    [data-testid="stSidebarCollapsedControl"] svg {
+    [data-testid="stSidebarCollapsedControl"] svg,
+    button[aria-label="Open sidebar"] svg,
+    button[aria-label="Close sidebar"] svg,
+    button[title="Open sidebar"] svg,
+    button[title="Close sidebar"] svg {
         color: #ffffff !important;
         fill: #ffffff !important;
     }
 
-    /* Prevent header title overlay from blocking the menu button */
-    header[data-testid="stHeader"]::before {
-        pointer-events: none;
-    }
-
-    /* 4. Mobile Layout Fix */
+    /* 5. Mobile Layout Fix */
     @media (max-width: 768px) {
         header[data-testid="stHeader"]::before {
             display: none !important;
@@ -145,7 +158,6 @@ hide_streamlit_style = """
     }
 </style>
 """
-st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
 # ==========================================
 # CSS LOADING FROM FILES
@@ -1233,6 +1245,7 @@ try:
     st.markdown(load_css_from_file(st.session_state.dark_mode), unsafe_allow_html=True)
 except:
     st.markdown(get_fallback_css(st.session_state.dark_mode), unsafe_allow_html=True)
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
 # ==========================================
 # EXPORT FUNCTIONS
