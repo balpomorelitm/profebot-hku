@@ -873,7 +873,7 @@ def get_ai_response(user_message: str, notion_context: str, language: str, custo
 
     def is_admin_query(text: str) -> bool:
         admin_keywords = [
-            "syllabus", "silabo", "programa", "temario", "guia docente",
+            "syllabus", "sillabus", "sylabus", "syllabi", "silabo", "programa", "temario", "guia docente",
             "plan docente", "info general", "informacion general", "schedule",
             "calendar", "calendario", "cronograma", "horario", "grading",
             "grades", "nota", "notas", "assessment", "evaluacion", "evaluation",
