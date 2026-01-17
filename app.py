@@ -218,12 +218,12 @@ MODEL_FAST_ID = "DeepSeek-V3"
 ENDPOINT_FAST = f"{HKU_API_BASE}/deepseek/models/chat/completions"
 KEY_FAST = secrets["HKU_API_KEY"]
 
-# Smart Model (DeepSeek-R1) - For complex queries
-MODEL_SMART_ID = "DeepSeek-R1"
+# Smart Model (DeepSeek-V3) - For complex queries
+MODEL_SMART_ID = "DeepSeek-V3"
 ENDPOINT_SMART = f"{HKU_API_BASE}/deepseek/models/chat/completions"
 KEY_SMART = secrets["HKU_API_KEY"]
 
-# Enable hybrid routing (uses GPT for complex queries, DeepSeek for simple)
+# Enable hybrid routing (uses DeepSeek-V3 for complex queries, DeepSeek-V3 for simple)
 USE_HYBRID_ROUTER = True
 
 # Legacy compatibility
@@ -727,7 +727,7 @@ def call_ai_model(
     
     Args:
         messages: List of message dicts with 'role' and 'content'
-        model_type: 'fast' for DeepSeek-V3, 'smart' for GPT-5.1
+        model_type: 'fast' for DeepSeek-V3, 'smart' for DeepSeek-V3 (complex)
         max_tokens: Maximum tokens in response
         temperature: Response creativity (0-1)
     
@@ -735,7 +735,7 @@ def call_ai_model(
         Response content string or None if failed
     """
     if model_type == "smart":
-        # DeepSeek-R1 configuration (same gateway as DeepSeek-V3)
+        # DeepSeek-V3 configuration (complex queries)
         headers = {
             "Content-Type": "application/json",
             "Cache-Control": "no-cache",
