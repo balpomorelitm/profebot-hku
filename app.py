@@ -186,12 +186,23 @@ def load_secrets() -> Dict[str, str]:
         except KeyError:
             hku_gpt_key = hku_api_key
             logger.warning("HKU_GPT_KEY not found, using HKU_API_KEY as fallback")
+
+        # Optional multi-key setup (fallback/rotation)
+        api_keys = [
+            st.secrets.get("HKU_API_KEY_1"),
+            st.secrets.get("HKU_API_KEY_2"),
+            st.secrets.get("HKU_API_KEY_3"),
+        ]
+        api_keys = [k for k in api_keys if k]
+        if api_keys:
+            hku_api_key = api_keys[0]
         
         return {
             "NOTION_TOKEN": st.secrets["NOTION_TOKEN"],
             "DATABASE_ID": st.secrets["DATABASE_ID"],
             "HKU_API_KEY": hku_api_key,
-            "HKU_GPT_KEY": hku_gpt_key
+            "HKU_GPT_KEY": hku_gpt_key,
+            "HKU_API_KEYS": api_keys if api_keys else [hku_api_key]
         }
     except (FileNotFoundError, KeyError) as e:
         st.sidebar.error("⚠️ Missing secrets configuration")
@@ -199,7 +210,8 @@ def load_secrets() -> Dict[str, str]:
             "NOTION_TOKEN": "your_notion_token_here",
             "DATABASE_ID": "your_database_id_here",
             "HKU_API_KEY": "your_hku_api_key_here",
-            "HKU_GPT_KEY": "your_hku_gpt_key_here"
+            "HKU_GPT_KEY": "your_hku_gpt_key_here",
+            "HKU_API_KEYS": ["your_hku_api_key_here"]
         }
 
 secrets = load_secrets()
@@ -216,6 +228,7 @@ HKU_API_BASE = "https://api.hku.hk"
 MODEL_FAST_ID = "DeepSeek-V3"
 ENDPOINT_FAST = f"{HKU_API_BASE}/deepseek/models/chat/completions"
 KEY_FAST = secrets["HKU_API_KEY"]
+API_KEYS = secrets.get("HKU_API_KEYS", [KEY_FAST])
 
 # Legacy compatibility
 DEPLOYMENT_ID = MODEL_FAST_ID
@@ -693,45 +706,58 @@ def call_ai_model(
     Returns:
         Response content string or None if failed
     """
-    # DeepSeek-V3 configuration (single model)
-    headers = {
-        "Content-Type": "application/json",
-        "Cache-Control": "no-cache",
-        "Ocp-Apim-Subscription-Key": KEY_FAST
-    }
+    # DeepSeek-V3 configuration (single model with API key fallback)
     payload = {
         "model": MODEL_FAST_ID,
         "messages": messages,
         "max_tokens": max_tokens,
         "temperature": temperature
     }
-    response = make_request_with_retry(
-        "POST",
-        ENDPOINT_FAST,
-        headers,
-        json_payload=payload,
-        params={"deployment-id": MODEL_FAST_ID}
-    )
-    if response and response.status_code != 200:
-        logger.error(f"FAST API Error ({response.status_code}): {response.text[:500]}")
-        err_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        st.session_state.last_fast_error = f"{err_time} | {response.status_code}: {response.text[:500]}"
-    
+    retriable_statuses = {429, 500, 502, 503, 504}
+    response = None
+    last_error = None
+
+    for api_key in API_KEYS:
+        headers = {
+            "Content-Type": "application/json",
+            "Cache-Control": "no-cache",
+            "Ocp-Apim-Subscription-Key": api_key
+        }
+        response = make_request_with_retry(
+            "POST",
+            ENDPOINT_FAST,
+            headers,
+            json_payload=payload,
+            params={"deployment-id": MODEL_FAST_ID}
+        )
+        if response and response.status_code == 200:
+            break
+
+        if response:
+            last_error = f"{response.status_code}: {response.text[:500]}"
+            logger.warning(f"API key failed ({last_error})")
+            if response.status_code not in retriable_statuses:
+                break
+        else:
+            last_error = "No response from model"
+            logger.warning("API key failed (no response)")
+
     if not response:
-        logger.error("No response from model")
         err_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        st.session_state.last_fast_error = f"{err_time} | No response from model"
+        st.session_state.last_fast_error = f"{err_time} | {last_error or 'No response from model'}"
         return None
-    
+
     if response.status_code == 200:
         try:
-            return response.json()['choices'][0]['message']['content']
+            return response.json()["choices"][0]["message"]["content"]
         except (KeyError, IndexError) as e:
             logger.error(f"Unexpected API response format from {model_type}: {e}")
             return None
-    else:
-        logger.error(f"API Error ({response.status_code}): {response.text[:200]}")
-        return None
+
+    err_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    st.session_state.last_fast_error = f"{err_time} | {last_error or response.text[:200]}"
+    logger.error(f"API Error ({response.status_code}): {response.text[:200]}")
+    return None
 
 
 def get_ai_response(user_message: str, notion_context: str, language: str, custom_language: str = "", conversation_history: List[Dict] = None) -> str:
