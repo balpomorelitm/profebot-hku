@@ -213,9 +213,9 @@ DATABASE_ID = secrets["DATABASE_ID"]
 HKU_API_BASE = "https://api.hku.hk"
 HKU_API_VERSION = "2025-01-01-preview"
 
-# Fast Model (DeepSeek-V3) - For routing and simple queries
-MODEL_FAST_ID = "DeepSeek-V3"
-ENDPOINT_FAST = f"{HKU_API_BASE}/deepseek/models/chat/completions"
+# Fast Model (GPT-5-Chat) - For routing and simple queries
+MODEL_FAST_ID = "gpt-5-chat"
+ENDPOINT_FAST = f"{HKU_API_BASE}/openai/models/chat/completions"
 KEY_FAST = secrets["HKU_API_KEY"]
 
 # Smart Model (GPT-5.1) - For complex queries
