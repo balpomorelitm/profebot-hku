@@ -313,38 +313,6 @@ def get_language_instruction(language: str, custom_language: str = "") -> str:
     else:
         return "All grammatical explanations, feedback, and answers to administrative questions MUST be in ENGLISH."
 
-def get_current_semester_info() -> dict:
-    """Determine current semester based on month and return relevant unit information."""
-    current_month = datetime.now().month
-    
-    if 1 <= current_month <= 5:  # January to May = Semester 2
-        return {
-            "semester": 2,
-            "semester_name": "Second Semester (Spring)",
-            "primary_units": "Units 7-12",
-            "secondary_units": "Units 1-4 (next level book)",
-            "focus_description": "The student is in the SECOND SEMESTER. Prioritize content from Units 7 onwards. Units 0-6 were covered last semester and can be referenced for review, but new content should focus on Units 7+.",
-            "months": "January - May"
-        }
-    elif 9 <= current_month <= 12:  # September to December = Semester 1
-        return {
-            "semester": 1,
-            "semester_name": "First Semester (Fall)",
-            "primary_units": "Units 0-6",
-            "secondary_units": "None (first semester)",
-            "focus_description": "The student is in the FIRST SEMESTER. Focus primarily on Units 0-6. Do not introduce content from Units 7+ as they haven't covered that material yet.",
-            "months": "September - December"
-        }
-    else:  # June to August = Summer break / transition period
-        return {
-            "semester": 0,
-            "semester_name": "Summer Period",
-            "primary_units": "All units for review",
-            "secondary_units": "Preparation for next semester",
-            "focus_description": "This is the SUMMER PERIOD between semesters. The student may be reviewing material or preparing for the next academic year. Cover all units as needed based on the student's questions.",
-            "months": "June - August"
-        }
-
 # ==========================================
 # USER PROFILE & MEMORY SYSTEM
 # ==========================================
@@ -906,7 +874,6 @@ def get_ai_response(user_message: str, notion_context: str, language: str, custo
             return f"{cached}\n<!--ROUTER_DEBUG:CACHED|Cache-->"
     
     language_instruction = get_language_instruction(language, custom_language)
-    semester_info = get_current_semester_info()
     user_context = get_user_context_for_prompt()
     info_general_context = extract_info_general(notion_context) if admin_query else ""
     
@@ -931,8 +898,7 @@ You are "ProfeBot", the official Spanish Tutor for Spanish Year 1 at the Univers
 
 **YOUR STUDENTS:**
 - Adults at HKU who are intelligent and multilingual (English, Mandarin, Cantonese)
-- Complete beginners in Spanish (A1 level)
-- Busy university students who appreciate efficient, focused explanations
+- Second semester in Spanish (A1.3 level)
 
 **YOUR TONE:**
 - Academic yet approachable
@@ -975,17 +941,10 @@ When a student asks a question, follow this process:
 4. **EXAMPLE**: If a student asks about "numbers" or "age", check which unit has tags related to numbers/age, then use ONLY the vocabulary and grammar from that unit.
 5. **MULTIPLE UNITS**: If the topic spans multiple units, combine information from all relevant units but clearly indicate which content comes from which unit.
 
-[📅 SEMESTER-AWARE CONTENT PRIORITIZATION]
-**Current Academic Period:** {semester_info['semester_name']} ({semester_info['months']})
-**Primary Focus Units:** {semester_info['primary_units']}
-**Secondary/Advanced Units:** {semester_info['secondary_units']}
-
-**IMPORTANT CONTEXT:** {semester_info['focus_description']}
-
-**How to apply this:**
-- When answering questions, PRIORITIZE content from the primary focus units for this semester.
-- If a student asks about content from units they haven't covered yet (based on the semester), gently explain that this topic will be covered later in the course, but you can give them a brief preview if they're curious.
-- For review questions about past semesters' content, feel free to help but remind them that this was previous material.
+[COURSE CONTEXT - SPAN1002]
+The student is enrolled in **SPAN1002**, so the course starts at **Unit 7**.
+- **Primary focus**: Units 7 and above.
+- **Foundations**: Units 0-6 can be used as review or to support explanations when needed.
 - Always check which units are currently "Active" in the database - these represent what the teacher has enabled for the current period.
 {user_context}
 
@@ -1034,10 +993,6 @@ Rules for quiz format:
 [EXERCISE GENERATION LOGIC]
 ⚠️ LANGUAGE REMINDER: ALL exercise instructions and explanations MUST be in the STUDENT'S PREFERRED LANGUAGE.
 
-- When the user asks for an exercise or practice:
-  1. **PRIORITY 1**: Check the `[APPROVED EXERCISES]` section in the content below. If there are exercises there, USE THEM.
-  2. **PRIORITY 2**: If NO exercises are listed there (or they are exhausted), generate a meaningful "Fill-in-the-blanks" or "Multiple Choice" exercise based STRICTLY on the vocabulary list.
-  3. **QUALITY CONTROL**: AVOID trivial questions (e.g., "Is 'Hola' written with H?"). Create communicative context (e.g., "Complete the dialogue between A and B").
 
 [EXPLAIN MORE COMMAND]
 When the user requests CMD_EXPLAIN_MORE:
@@ -2391,3 +2346,4 @@ if prompt := st.chat_input("Type your question here... (any language)", key="mai
 # </script>
 # '''
 # components.html(scroll_js, height=0, scrolling=False)
+
