@@ -211,20 +211,11 @@ DATABASE_ID = secrets["DATABASE_ID"]
 # ==========================================
 # API Base URL for HKU
 HKU_API_BASE = "https://api.hku.hk"
-HKU_API_VERSION = "2025-01-01-preview"
 
-# Fast Model (GPT-5-Chat) - For routing and simple queries
-MODEL_FAST_ID = "gpt-5-chat"
-ENDPOINT_FAST = f"{HKU_API_BASE}/openai/models/chat/completions"
+# Model (DeepSeek-V3) - Single model for all queries
+MODEL_FAST_ID = "DeepSeek-V3"
+ENDPOINT_FAST = f"{HKU_API_BASE}/deepseek/models/chat/completions"
 KEY_FAST = secrets["HKU_API_KEY"]
-
-# Smart Model (GPT-5.1) - For complex queries
-MODEL_SMART_ID = "gpt-5.1"
-ENDPOINT_SMART = f"{HKU_API_BASE}/openai/models/chat/completions"
-KEY_SMART = secrets["HKU_API_KEY"]
-
-# Enable hybrid routing (uses GPT-5.1 for complex queries, DeepSeek-V3 for simple)
-USE_HYBRID_ROUTER = True
 
 # Legacy compatibility
 DEPLOYMENT_ID = MODEL_FAST_ID
@@ -695,71 +686,41 @@ def call_ai_model(
     
     Args:
         messages: List of message dicts with 'role' and 'content'
-        model_type: 'fast' for DeepSeek-V3, 'smart' for GPT-5.1 (complex)
+        model_type: 'fast' for DeepSeek-V3
         max_tokens: Maximum tokens in response
         temperature: Response creativity (0-1)
     
     Returns:
         Response content string or None if failed
     """
-    if model_type == "smart":
-        # GPT-5.1 configuration (complex queries)
-        headers = {
-            "Content-Type": "application/json",
-            "Cache-Control": "no-cache",
-            "Ocp-Apim-Subscription-Key": KEY_SMART,
-            "api-key": KEY_SMART
-        }
-        payload = {
-            "model": MODEL_SMART_ID,
-            "messages": messages,
-            "max_tokens": max_tokens,
-            "temperature": temperature
-        }
-        response = make_request_with_retry(
-            "POST",
-            ENDPOINT_SMART,
-            headers,
-            json_payload=payload,
-            params={"deployment-id": MODEL_SMART_ID, "api-version": HKU_API_VERSION}
-        )
-        if response and response.status_code != 200:
-            logger.error(f"SMART API Error ({response.status_code}): {response.text[:500]}")
-            err_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            st.session_state.last_smart_error = f"{err_time} | {response.status_code}: {response.text[:500]}"
-    else:
-        # DeepSeek-V3 configuration
-        headers = {
-            "Content-Type": "application/json",
-            "Cache-Control": "no-cache",
-            "Ocp-Apim-Subscription-Key": KEY_FAST,
-            "api-key": KEY_FAST
-        }
-        payload = {
-            "model": MODEL_FAST_ID,
-            "messages": messages,
-            "max_tokens": max_tokens,
-            "temperature": temperature
-        }
-        response = make_request_with_retry(
-            "POST",
-            ENDPOINT_FAST,
-            headers,
-            json_payload=payload,
-            params={"deployment-id": MODEL_FAST_ID, "api-version": HKU_API_VERSION}
-        )
-        if response and response.status_code != 200:
-            logger.error(f"FAST API Error ({response.status_code}): {response.text[:500]}")
-            err_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            st.session_state.last_fast_error = f"{err_time} | {response.status_code}: {response.text[:500]}"
+    # DeepSeek-V3 configuration (single model)
+    headers = {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-cache",
+        "Ocp-Apim-Subscription-Key": KEY_FAST
+    }
+    payload = {
+        "model": MODEL_FAST_ID,
+        "messages": messages,
+        "max_tokens": max_tokens,
+        "temperature": temperature
+    }
+    response = make_request_with_retry(
+        "POST",
+        ENDPOINT_FAST,
+        headers,
+        json_payload=payload,
+        params={"deployment-id": MODEL_FAST_ID}
+    )
+    if response and response.status_code != 200:
+        logger.error(f"FAST API Error ({response.status_code}): {response.text[:500]}")
+        err_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        st.session_state.last_fast_error = f"{err_time} | {response.status_code}: {response.text[:500]}"
     
     if not response:
-        logger.error(f"No response from {model_type} model")
+        logger.error("No response from model")
         err_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        if model_type == "smart":
-            st.session_state.last_smart_error = f"{err_time} | No response from SMART model"
-        else:
-            st.session_state.last_fast_error = f"{err_time} | No response from FAST model"
+        st.session_state.last_fast_error = f"{err_time} | No response from model"
         return None
     
     if response.status_code == 200:
@@ -769,61 +730,8 @@ def call_ai_model(
             logger.error(f"Unexpected API response format from {model_type}: {e}")
             return None
     else:
-        logger.error(f"{model_type} API Error ({response.status_code}): {response.text[:200]}")
+        logger.error(f"API Error ({response.status_code}): {response.text[:200]}")
         return None
-
-
-def classify_query_complexity(user_message: str, conversation_history: List[Dict] = None) -> tuple:
-    """Use fast model to classify query as SIMPLE or COMPLEX.
-    
-    Returns:
-        Tuple of (classification: str, reasoning: str)
-    """
-    # Build context from recent history
-    history_context = ""
-    if conversation_history:
-        recent_msgs = conversation_history[-4:]  # Last 4 messages for context
-        history_context = "\n".join([f"{m['role']}: {m['content'][:200]}" for m in recent_msgs])
-    
-    router_prompt = f"""You are a query classifier for a Spanish language tutor chatbot. Analyze the user's query and classify it.
-
-CLASSIFY AS "SIMPLE" if the query is:
-- Basic vocabulary questions ("What does X mean?")
-- Simple greetings or casual conversation
-- Requests for examples of words they already know
-- Yes/no questions about Spanish basics
-- Requests to repeat or clarify previous information
-
-CLASSIFY AS "COMPLEX" if the query is:
-- Grammar explanations requiring detailed breakdowns
-- Requests for tasks, quizzes, or exercises (CMD_TASKS, CMD_QUIZ)
-- Comparisons between grammatical structures
-- Cultural explanations requiring nuance
-- Reading comprehension tasks
-- Roleplay or conversation practice (CMD_ROLEPLAY)
-- Questions about verb conjugation patterns
-- Requests for "more explanation" (CMD_EXPLAIN_MORE)
-- Any multi-step or creative content generation
-- Administrative questions about the course
-
-Recent conversation context:
-{history_context}
-
-User query: "{user_message}"
-
-Respond with ONLY one word: SIMPLE or COMPLEX"""
-
-    messages = [{"role": "user", "content": router_prompt}]
-    
-    result = call_ai_model(messages, model_type="fast", max_tokens=10, temperature=0.1)
-    
-    if result:
-        classification = "COMPLEX" if "COMPLEX" in result.upper() else "SIMPLE"
-        return classification
-    
-    # Default to SIMPLE if router fails
-    logger.warning("Router classification failed, defaulting to SIMPLE")
-    return "SIMPLE"
 
 
 def get_ai_response(user_message: str, notion_context: str, language: str, custom_language: str = "", conversation_history: List[Dict] = None) -> str:
@@ -935,7 +843,7 @@ The student's preferred language setting is: **{language_instruction}**
    - You are STRICTLY FORBIDDEN from using vocabulary, verb tenses, or grammar rules that do not appear in the "ACTIVE CONTENT" list below.
    - If the student asks about something advanced (e.g., "fui" - past tense), congratulate their curiosity but explain IN THEIR PREFERRED LANGUAGE that it belongs to future levels and rephrase using ONLY what they know now.
 
-[🎯 SMART ROUTING SYSTEM - USE TAGS]
+[🎯 ROUTING SYSTEM - USE TAGS]
 When a student asks a question, follow this process:
 1. **FIRST**: Read the [TAGS] section of each unit - these contain key concepts, themes, and topics covered in that unit.
 2. **IDENTIFY**: Match the student's question to the most relevant unit(s) based on the tags.
@@ -1137,38 +1045,11 @@ At the very end of your response, you MUST generate exactly 3 suggested follow-u
     
     logger.info(f"Sending {len(messages)} messages to AI (including system prompt)")
     
-    # ==========================================
-    # HYBRID ROUTER LOGIC
-    # ==========================================
-    if USE_HYBRID_ROUTER:
-        # Step 1: Classify query complexity using fast model
-        complexity = "COMPLEX" if admin_query else classify_query_complexity(user_message, conversation_history)
-        logger.info(f"Query classified as: {complexity}")
-        
-        # Step 2: Select model based on complexity
-        if complexity == "COMPLEX":
-            # Try smart model first for complex queries
-            logger.info(f"Using SMART model ({MODEL_SMART_ID}) for complex query")
-            result = call_ai_model(messages, model_type="smart", max_tokens=1500, temperature=0.4)
-            
-            # Step 3: Failover to fast model if smart fails
-            if result is None:
-                logger.warning(f"SMART model failed, falling back to FAST model ({MODEL_FAST_ID})")
-                result = call_ai_model(messages, model_type="fast", max_tokens=1200, temperature=0.4)
-                model_used = f"{MODEL_FAST_ID} (fallback)"
-            else:
-                model_used = MODEL_SMART_ID
-        else:
-            # Use fast model for simple queries
-            logger.info(f"Using FAST model ({MODEL_FAST_ID}) for simple query")
-            result = call_ai_model(messages, model_type="fast", max_tokens=1000, temperature=0.4)
-            model_used = MODEL_FAST_ID
-    else:
-        # Hybrid routing disabled - use only DeepSeek
-        logger.info(f"Hybrid routing disabled, using {MODEL_FAST_ID}")
-        result = call_ai_model(messages, model_type="fast", max_tokens=1200, temperature=0.4)
-        model_used = MODEL_FAST_ID
-        complexity = "N/A"
+    # Single model (DeepSeek-V3) for all queries
+    logger.info(f"Using model ({MODEL_FAST_ID}) for query")
+    result = call_ai_model(messages, model_type="fast", max_tokens=1200, temperature=0.4)
+    model_used = MODEL_FAST_ID
+    complexity = "N/A"
     
     if result is None:
         return "❌ Failed to connect to AI service. Please try again later."
@@ -1226,8 +1107,6 @@ def initialize_session_state():
     if "dark_mode" not in st.session_state:
         st.session_state.dark_mode = False
 
-    if "last_smart_error" not in st.session_state:
-        st.session_state.last_smart_error = ""
     if "last_fast_error" not in st.session_state:
         st.session_state.last_fast_error = ""
     
@@ -1835,13 +1714,7 @@ try:
             st.caption(f"Model: {DEPLOYMENT_ID}")
 
         with st.expander("Diagnostics"):
-            smart_err = st.session_state.get("last_smart_error", "")
             fast_err = st.session_state.get("last_fast_error", "")
-            if smart_err:
-                st.caption("SMART last error:")
-                st.code(smart_err)
-            else:
-                st.caption("SMART last error: none")
             if fast_err:
                 st.caption("FAST last error:")
                 st.code(fast_err)
@@ -2348,4 +2221,5 @@ if prompt := st.chat_input("Type your question here... (any language)", key="mai
 # </script>
 # '''
 # components.html(scroll_js, height=0, scrolling=False)
+
 
