@@ -215,12 +215,12 @@ HKU_API_VERSION = "2025-01-01-preview"
 
 # Fast Model (GPT-5-Chat) - For routing and simple queries
 MODEL_FAST_ID = "gpt-5-chat"
-ENDPOINT_FAST = f"{HKU_API_BASE}/openai/models/chat/completions"
+ENDPOINT_FAST = f"{HKU_API_BASE}/openai/deployments/{MODEL_FAST_ID}/chat/completions"
 KEY_FAST = secrets["HKU_API_KEY"]
 
 # Smart Model (GPT-5.1) - For complex queries
 MODEL_SMART_ID = "gpt-5.1"
-ENDPOINT_SMART = f"{HKU_API_BASE}/openai/models/chat/completions"
+ENDPOINT_SMART = f"{HKU_API_BASE}/openai/deployments/{MODEL_SMART_ID}/chat/completions"
 KEY_SMART = secrets["HKU_API_KEY"]
 
 # Enable hybrid routing (uses GPT-5.1 for complex queries, DeepSeek-V3 for simple)
@@ -720,7 +720,7 @@ def call_ai_model(
             ENDPOINT_SMART,
             headers,
             json_payload=payload,
-            params={"deployment-id": MODEL_SMART_ID}
+            params={"api-version": HKU_API_VERSION}
         )
         if response and response.status_code != 200:
             logger.error(f"SMART API Error ({response.status_code}): {response.text[:500]}")
@@ -744,7 +744,7 @@ def call_ai_model(
             ENDPOINT_FAST,
             headers,
             json_payload=payload,
-            params={"deployment-id": MODEL_FAST_ID}
+            params={"api-version": HKU_API_VERSION}
         )
         if response and response.status_code != 200:
             logger.error(f"FAST API Error ({response.status_code}): {response.text[:500]}")
