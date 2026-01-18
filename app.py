@@ -185,7 +185,6 @@ def load_secrets() -> Dict[str, str]:
             hku_gpt_key = st.secrets["HKU_GPT_KEY"]
         except KeyError:
             hku_gpt_key = hku_api_key
-            logger.warning("HKU_GPT_KEY not found, using HKU_API_KEY as fallback")
 
         # Optional multi-key setup (fallback/rotation)
         api_keys = [
